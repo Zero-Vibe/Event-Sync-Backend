@@ -12,15 +12,11 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Question {
-
+public class Organizer {
     private UUID id;
-    private UUID sessionId;
-    private String content;
-    private String authorName;   // null = anonymous
-
-    @Builder.Default
-    private int upvotes = 0;
-
+    private String email;
+    private String passwordHash;
+    private String name;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

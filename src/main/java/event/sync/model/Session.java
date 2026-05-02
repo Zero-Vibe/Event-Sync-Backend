@@ -1,6 +1,6 @@
 package event.sync.model;
 
-import event.sync.model.enums.SessionStatut;
+import event.sync.model.enums.SessionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,19 +18,19 @@ import java.util.UUID;
 public class Session {
 
     private UUID id;
-    private UUID evenementId;   // référence à Evenement.id
-    private UUID salleId;       // référence à Salle.id
-    private String titre;
+    private UUID eventId;
+    private UUID roomId;
+    private String title;
     private String description;
-    private LocalDateTime heureDebut;
-    private LocalDateTime heureFin;
-    private Integer capacite;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private Integer capacity;
 
     @Builder.Default
-    private SessionStatut statut = SessionStatut.BROUILLON;
+    private SessionStatus status = SessionStatus.DRAFT;
 
     @Builder.Default
-    private List<Intervenant> intervenants = new ArrayList<>();
+    private List<Speaker> speakers = new ArrayList<>();
 
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
@@ -39,6 +39,6 @@ public class Session {
     private LocalDateTime updatedAt;
 
     public boolean isLive() {
-        return SessionStatut.EN_COURS.equals(this.statut);
+        return SessionStatus.LIVE.equals(this.status);
     }
 }
