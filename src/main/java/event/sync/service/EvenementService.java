@@ -1,6 +1,6 @@
 package event.sync.service;
 
-import event.sync.model.request.EvenementCreateRequest;
+import event.sync.dto.event.EvenementCreateRequest;
 import event.sync.model.Evenement;
 import event.sync.repository.EvenementRepository;
 import lombok.RequiredArgsConstructor;
