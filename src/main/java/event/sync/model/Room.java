@@ -14,10 +14,10 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Salle {
+public class Room {
 
     private UUID id;
-    private String nom;
+    private String name;
 
     @Builder.Default
     private List<Session> sessions = new ArrayList<>();
