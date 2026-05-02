@@ -1,4 +1,4 @@
-package event.sync.model.request;
+package event.sync.dto.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
