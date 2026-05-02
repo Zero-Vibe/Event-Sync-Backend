@@ -1,0 +1,818 @@
+openapi: "3.0.3"
+info:
+  title: EventSync API
+  description: API de gestion d'événements et d'engagement des participants en temps réel
+  version: "1.0.0"
+  contact:
+    name: EventSync
+servers:
+  - url: https://api.eventsync.io/v1
+    description: Serveur de production
+  - url: http://localhost:3000/v1
+    description: Serveur local de développement
+
+# ─────────────────────────────────────────
+# SÉCURITÉ
+# ─────────────────────────────────────────
+security: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT requis uniquement pour les routes organisateur (admin)
+
+  # ─────────────────────────────────────────
+  # SCHEMAS
+  # ─────────────────────────────────────────
+  schemas:
+
+    # ── EVENEMENT ────────────────────────────
+    Evenement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        titre:
+          type: string
+          example: "DevConf 2025"
+        description:
+          type: string
+        date_debut:
+          type: string
+          format: date-time
+        date_fin:
+          type: string
+          format: date-time
+        lieu:
+          type: string
+          example: "Paris, France"
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionResume"
+      required: [id, titre, date_debut, date_fin, lieu]
+
+    EvenementCreate:
+      type: object
+      properties:
+        titre:
+          type: string
+        description:
+          type: string
+        date_debut:
+          type: string
+          format: date-time
+        date_fin:
+          type: string
+          format: date-time
+        lieu:
+          type: string
+      required: [titre, date_debut, date_fin, lieu]
+
+    # ── SESSION ──────────────────────────────
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        titre:
+          type: string
+        description:
+          type: string
+        heure_debut:
+          type: string
+          format: date-time
+        heure_fin:
+          type: string
+          format: date-time
+        capacite:
+          type: integer
+          description: Valeur informative uniquement
+        is_live:
+          type: boolean
+          description: True si heure actuelle est entre heure_debut et heure_fin
+        salle:
+          $ref: "#/components/schemas/Salle"
+        intervenants:
+          type: array
+          items:
+            $ref: "#/components/schemas/IntervenantResume"
+        evenement_id:
+          type: string
+          format: uuid
+      required: [id, titre, heure_debut, heure_fin, salle, intervenants, evenement_id]
+
+    SessionResume:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        titre:
+          type: string
+        heure_debut:
+          type: string
+          format: date-time
+        heure_fin:
+          type: string
+          format: date-time
+        is_live:
+          type: boolean
+        salle:
+          $ref: "#/components/schemas/Salle"
+        intervenants:
+          type: array
+          items:
+            $ref: "#/components/schemas/IntervenantResume"
+
+    SessionCreate:
+      type: object
+      properties:
+        titre:
+          type: string
+        description:
+          type: string
+        heure_debut:
+          type: string
+          format: date-time
+        heure_fin:
+          type: string
+          format: date-time
+        capacite:
+          type: integer
+        salle_id:
+          type: string
+          format: uuid
+        intervenant_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+      required: [titre, heure_debut, heure_fin, salle_id, intervenant_ids]
+
+    # ── SALLE ────────────────────────────────
+    Salle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom:
+          type: string
+          example: "Salle A"
+      required: [id, nom]
+
+    SalleCreate:
+      type: object
+      properties:
+        nom:
+          type: string
+      required: [nom]
+
+    # ── INTERVENANT ──────────────────────────
+    Intervenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom_complet:
+          type: string
+        photo_profil:
+          type: string
+          format: uri
+        biographie:
+          type: string
+        liens_externes:
+          type: array
+          items:
+            type: string
+            format: uri
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionResume"
+      required: [id, nom_complet]
+
+    IntervenantResume:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom_complet:
+          type: string
+        photo_profil:
+          type: string
+          format: uri
+
+    IntervenantCreate:
+      type: object
+      properties:
+        nom_complet:
+          type: string
+        photo_profil:
+          type: string
+          format: uri
+        biographie:
+          type: string
+        liens_externes:
+          type: array
+          items:
+            type: string
+            format: uri
+      required: [nom_complet]
+
+    # ── QUESTION ─────────────────────────────
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contenu:
+          type: string
+        nom_auteur:
+          type: string
+          nullable: true
+          description: Null si anonyme
+        upvotes:
+          type: integer
+          default: 0
+        created_at:
+          type: string
+          format: date-time
+        session_id:
+          type: string
+          format: uuid
+      required: [id, contenu, upvotes, created_at, session_id]
+
+    QuestionCreate:
+      type: object
+      properties:
+        contenu:
+          type: string
+          minLength: 1
+        nom_auteur:
+          type: string
+          nullable: true
+          description: Optionnel — anonyme si absent
+      required: [contenu]
+
+    # ── AUTH ─────────────────────────────────
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required: [email, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: "bearer"
+        expires_in:
+          type: integer
+          example: 3600
+
+    # ── ERREURS ──────────────────────────────
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required: [code, message]
+
+# ─────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────
+paths:
+
+  # ── AUTH ─────────────────────────────────
+  /auth/login:
+    post:
+      summary: Connexion organisateur
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authentification réussie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ── ÉVÉNEMENTS ───────────────────────────
+  /evenements:
+    get:
+      summary: Lister tous les événements
+      tags: [Événements]
+      responses:
+        "200":
+          description: Liste des événements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Evenement"
+
+    post:
+      summary: Créer un événement
+      tags: [Événements]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvenementCreate"
+      responses:
+        "201":
+          description: Événement créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evenement"
+        "401":
+          description: Non autorisé
+
+  /evenements/{evenement_id}:
+    parameters:
+      - name: evenement_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Détail d'un événement
+      tags: [Événements]
+      responses:
+        "200":
+          description: Détail de l'événement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evenement"
+        "404":
+          description: Événement non trouvé
+
+    put:
+      summary: Modifier un événement
+      tags: [Événements]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvenementCreate"
+      responses:
+        "200":
+          description: Événement mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evenement"
+        "401":
+          description: Non autorisé
+        "404":
+          description: Événement non trouvé
+
+    delete:
+      summary: Supprimer un événement
+      tags: [Événements]
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Événement supprimé
+        "401":
+          description: Non autorisé
+        "404":
+          description: Événement non trouvé
+
+  # ── SESSIONS ─────────────────────────────
+  /evenements/{evenement_id}/sessions:
+    parameters:
+      - name: evenement_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Lister les sessions d'un événement
+      tags: [Sessions]
+      parameters:
+        - name: salle_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filtrer par salle
+        - name: live
+          in: query
+          schema:
+            type: boolean
+          description: Filtrer uniquement les sessions en cours
+      responses:
+        "200":
+          description: Liste des sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+    post:
+      summary: Créer une session
+      tags: [Sessions]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionCreate"
+      responses:
+        "201":
+          description: Session créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Non autorisé
+
+  /evenements/{evenement_id}/sessions/{session_id}:
+    parameters:
+      - name: evenement_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Détail d'une session
+      tags: [Sessions]
+      responses:
+        "200":
+          description: Détail de la session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Session non trouvée
+
+    put:
+      summary: Modifier une session
+      tags: [Sessions]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionCreate"
+      responses:
+        "200":
+          description: Session mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Non autorisé
+
+    delete:
+      summary: Supprimer une session
+      tags: [Sessions]
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Session supprimée
+        "401":
+          description: Non autorisé
+
+  # ── QUESTIONS ────────────────────────────
+  /evenements/{evenement_id}/sessions/{session_id}/questions:
+    parameters:
+      - name: evenement_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Lister les questions d'une session (triées par upvotes)
+      tags: [Questions]
+      responses:
+        "200":
+          description: Liste des questions triées par upvotes décroissants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+        "403":
+          description: Session non live — questions non accessibles
+
+    post:
+      summary: Poser une question (session live uniquement)
+      tags: [Questions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionCreate"
+      responses:
+        "201":
+          description: Question créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "403":
+          description: Session non live — impossible de poser une question
+
+  /evenements/{evenement_id}/sessions/{session_id}/questions/{question_id}/upvote:
+    parameters:
+      - name: evenement_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: question_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Upvoter une question
+      tags: [Questions]
+      responses:
+        "200":
+          description: Upvote enregistré
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "404":
+          description: Question non trouvée
+
+  # ── SALLES ───────────────────────────────
+  /salles:
+    get:
+      summary: Lister toutes les salles
+      tags: [Salles]
+      responses:
+        "200":
+          description: Liste des salles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Salle"
+
+    post:
+      summary: Créer une salle
+      tags: [Salles]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalleCreate"
+      responses:
+        "201":
+          description: Salle créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Salle"
+        "401":
+          description: Non autorisé
+
+  /salles/{salle_id}:
+    parameters:
+      - name: salle_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Détail d'une salle avec ses sessions
+      tags: [Salles]
+      responses:
+        "200":
+          description: Salle avec liste chronologique des sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Salle"
+                  - type: object
+                    properties:
+                      sessions:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/SessionResume"
+
+    put:
+      summary: Modifier une salle
+      tags: [Salles]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalleCreate"
+      responses:
+        "200":
+          description: Salle mise à jour
+        "401":
+          description: Non autorisé
+
+    delete:
+      summary: Supprimer une salle
+      tags: [Salles]
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Salle supprimée
+        "401":
+          description: Non autorisé
+
+  # ── INTERVENANTS ─────────────────────────
+  /intervenants:
+    get:
+      summary: Lister tous les intervenants
+      tags: [Intervenants]
+      responses:
+        "200":
+          description: Liste des intervenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntervenantResume"
+
+    post:
+      summary: Créer un intervenant
+      tags: [Intervenants]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntervenantCreate"
+      responses:
+        "201":
+          description: Intervenant créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intervenant"
+        "401":
+          description: Non autorisé
+
+  /intervenants/{intervenant_id}:
+    parameters:
+      - name: intervenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Page publique d'un intervenant
+      tags: [Intervenants]
+      responses:
+        "200":
+          description: Profil complet avec sessions associées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intervenant"
+        "404":
+          description: Intervenant non trouvé
+
+    put:
+      summary: Modifier un intervenant
+      tags: [Intervenants]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntervenantCreate"
+      responses:
+        "200":
+          description: Intervenant mis à jour
+        "401":
+          description: Non autorisé
+
+    delete:
+      summary: Supprimer un intervenant
+      tags: [Intervenants]
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Intervenant supprimé
+        "401":
+          description: Non autorisé
+
+# ─────────────────────────────────────────
+# TAGS
+# ─────────────────────────────────────────
+tags:
+  - name: Auth
+    description: Authentification organisateur
+  - name: Événements
+    description: CRUD événements
+  - name: Sessions
+    description: CRUD sessions et planning
+  - name: Questions
+    description: Q&A en temps réel (sessions live)
+  - name: Salles
+    description: Gestion et vue par salle
+  - name: Intervenants
+    description: Profils publics et gestion
