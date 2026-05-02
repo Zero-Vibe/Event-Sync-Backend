@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EvenementCreateRequest {
+public class EventCreateRequest {
 
-    private String titre;
+    private String title;
     private String description;
-    private LocalDateTime dateDebut;
-    private LocalDateTime dateFin;
-    private String lieu;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private String location;
 }

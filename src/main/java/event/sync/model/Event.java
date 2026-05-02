@@ -14,14 +14,14 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Evenement {
+public class Event {
 
     private UUID id;
-    private String titre;
+    private String title;
     private String description;
-    private LocalDateTime dateDebut;
-    private LocalDateTime dateFin;
-    private String lieu;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private String location;
     private UUID createdBy;
 
     @Builder.Default
