@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Evenement {
@@ -22,7 +22,7 @@ public class Evenement {
     private LocalDateTime dateDebut;
     private LocalDateTime dateFin;
     private String lieu;
-    private UUID createdBy; // référence à Organisateur.id
+    private UUID createdBy;
 
     @Builder.Default
     private List<Session> sessions = new ArrayList<>();
