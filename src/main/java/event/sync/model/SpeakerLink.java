@@ -1,6 +1,6 @@
 package event.sync.model;
 
-import event.sync.model.enums.LienType;
+import event.sync.model.enums.LinkType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,17 +12,17 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IntervenantLien {
+public class SpeakerLink {
 
     private UUID id;
-    private UUID intervenantId;
+    private UUID speakerId;
 
     @Builder.Default
-    private LienType type = LienType.OTHER;
+    private LinkType type = LinkType.OTHER;
 
     private String url;
     private String label;
 
     @Builder.Default
-    private short ordre = 0;
+    private short order = 0;
 }

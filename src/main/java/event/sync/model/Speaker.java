@@ -14,18 +14,18 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Intervenant {
+public class Speaker {
 
     private UUID id;
-    private String nomComplet;
-    private String photoProfil;
-    private String biographie;
+    private String fullName;
+    private String profilePicture;
+    private String biography;
 
     @Builder.Default
-    private List<IntervenantLien> liens = new ArrayList<>();
+    private List<SpeakerLink> links = new ArrayList<>();
 
     @Builder.Default
-    private List<UUID> sessionIds = new ArrayList<>(); // références aux sessions
+    private List<UUID> sessionIds = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

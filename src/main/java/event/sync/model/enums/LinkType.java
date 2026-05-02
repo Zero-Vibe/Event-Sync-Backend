@@ -1,6 +1,6 @@
 package event.sync.model.enums;
 
-public enum LienType {
+public enum LinkType {
     TWITTER,
     LINKEDIN,
     GITHUB,
