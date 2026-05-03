@@ -5,10 +5,7 @@ import event.sync.model.Organizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +35,31 @@ public class OrganizerRepository {
         } finally {
             dataSource.closeConnection(conn);
         }
+    }
+
+    public Organizer addOrganizer(Organizer organizer) {
+        String sql = "INSERT INTO organizers (id, email, password_hash, name, created_at, updated_at) ) VALUES (?, ?, ?, ?, ?, ?)";
+
+        Connection conn = dataSource.getConnection();
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, UUID.randomUUID().toString());
+            statement.setString(2, organizer.getEmail());
+            statement.setString(3, organizer.getPasswordHash());
+            statement.setString(4, organizer.getName());
+            statement.setTimestamp(5, Timestamp.valueOf(organizer.getCreatedAt()));
+            statement.setTimestamp(6, Timestamp.valueOf(organizer.getUpdatedAt()));
+
+            statement.executeUpdate();
+
+            return organizer;
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to add organizer", e);
+        } finally {
+            dataSource.closeConnection(conn);
+        }
+
     }
 
     private Organizer mapRow(ResultSet rs) throws SQLException {
