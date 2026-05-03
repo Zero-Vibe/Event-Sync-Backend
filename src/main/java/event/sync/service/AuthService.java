@@ -3,6 +3,8 @@ package event.sync.service;
 import event.sync.dto.auth.*;
 import event.sync.model.Organizer;
 import event.sync.repository.OrganizerRepository;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -11,11 +13,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final OrganizerRepository organizerRepository;
     private final JwtService jwtService;
+
+    public AuthService(OrganizerRepository organizerRepository, JwtService jwtService) {
+        this.organizerRepository = organizerRepository;
+        this.jwtService = jwtService;
+    }
 
     public LoginResponse login(LoginRequest request) {
         Organizer organizer = organizerRepository

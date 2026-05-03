@@ -2,7 +2,6 @@ package event.sync.repository;
 
 import event.sync.datasource.DataSourceConfig;
 import event.sync.model.Organizer;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -10,10 +9,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-@RequiredArgsConstructor
 public class OrganizerRepository {
 
     private final DataSourceConfig dataSource;
+
+    public OrganizerRepository(DataSourceConfig dataSource) {
+        this.dataSource = dataSource;
+    }
 
     public Optional<Organizer> findByEmail(String email) {
         String sql = "SELECT id, email, password_hash, name, created_at, updated_at FROM organizers WHERE email = ?";

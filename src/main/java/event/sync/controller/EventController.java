@@ -13,10 +13,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/events")
-@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
+
+    public EventController(EventService eventService) {
+        this.eventService = eventService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Event>> getAll() {

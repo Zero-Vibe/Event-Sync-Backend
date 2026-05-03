@@ -2,6 +2,7 @@ package event.sync.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 public class JwtService {
 
     private final SecretKey key;
+    @Getter
     private final int expirationSeconds;
 
     public JwtService(
@@ -36,7 +38,4 @@ public class JwtService {
                 .compact();
     }
 
-    public int getExpirationSeconds() {
-        return expirationSeconds;
-    }
 }
