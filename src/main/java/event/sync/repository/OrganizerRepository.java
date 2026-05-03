@@ -40,7 +40,7 @@ public class OrganizerRepository {
     }
 
     public Organizer addOrganizer(Organizer organizer) {
-        String sql = "INSERT INTO organizers (id, email, password_hash, name, created_at, updated_at) ) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO organizers (id, email, password_hash, name, created_at, updated_at) VALUES (?::uuid, ?, ?, ?, ?, ?)";
 
         Connection conn = dataSource.getConnection();
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
