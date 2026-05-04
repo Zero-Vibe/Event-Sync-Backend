@@ -1,5 +1,6 @@
 package event.sync.service;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -25,17 +26,22 @@ public class JwtService {
         this.expirationSeconds = expirationSeconds;
     }
 
-    public String generateToken(UUID organisateurId, String email) {
+    public String generateToken(UUID organizerId, String email) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + (long) expirationSeconds * 1000);
 
         return Jwts.builder()
-                .subject(organisateurId.toString())
+                .subject(organizerId.toString())
                 .claim("email", email)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
                 .compact();
+    }
+
+    public Claims decodeToken(String token) {
+        return Jwts.parser().setSigningKey(key)
+                .build().parseClaimsJws(token).getBody();
     }
 
 }
