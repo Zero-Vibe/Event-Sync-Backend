@@ -1,11 +1,15 @@
 package event.sync.repository;
 
 import event.sync.datasource.DataSourceConfig;
+import event.sync.dto.speaker.SpeakerCreateRequest;
+import event.sync.dto.speaker.SpeakerLinkRequest;
 import event.sync.model.Speaker;
 import event.sync.model.SpeakerLink;
 import event.sync.model.enums.LinkType;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -50,7 +54,7 @@ public class SpeakerRepository {
                     """
                     SELECT s.id, full_name, profile_picture, biography, created_at, updated_at
                     FROM speakers AS s
-                    JOIN session_speakers ON s.id = speaker_id 
+                    JOIN session_speakers ON s.id = speaker_id
                     WHERE session_id = ?::UUID
                     """
             );
@@ -138,6 +142,57 @@ public class SpeakerRepository {
             return speakers;
         } catch (SQLException | RuntimeException e) {
             dataSource.closeConnection(connection);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Speaker create(SpeakerCreateRequest speaker) {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO speakers (full_name, profile_picture, biography)
+                    VALUES (?, ?, ?)
+                    RETURNING id;
+                    """
+            );
+            ps.setString(1, speaker.getFullName());
+            ps.setString(2, speaker.getProfilePicture());
+            ps.setString(3, speaker.getBiography());
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not create speaker");
+            }
+            UUID speakerId = UUID.fromString(rs.getString("id"));
+            createLinks(connection, speakerId, speaker.getSpeakerLinks());
+
+            return findById(speakerId).get();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.closeConnection(connection);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createLinks(Connection connection, UUID speakerId, List<SpeakerLinkRequest> speakerLinks) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO speaker_links (speaker_id, type, url, label)
+                    VALUES (?::UUID, ?::link_type, ?, ?)
+                    RETURNING id;
+                    """
+            );
+            ps.setString(1, speakerId.toString());
+
+            for (SpeakerLinkRequest speakerLink : speakerLinks) {
+                ps.setString(2, speakerLink.getLinkType().name());
+                ps.setString(3, speakerLink.getUrl());
+                ps.setString(4, speakerLink.getLabel());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException | RuntimeException e) {
             throw new RuntimeException(e);
         }
     }

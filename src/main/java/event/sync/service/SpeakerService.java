@@ -1,5 +1,6 @@
 package event.sync.service;
 
+import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.model.Speaker;
 import event.sync.repository.SpeakerRepository;
 import lombok.AllArgsConstructor;
@@ -22,5 +23,9 @@ public class SpeakerService {
 
     public List<Speaker> getAll() {
         return speakerRepository.getAll();
+    }
+
+    public Speaker create(SpeakerCreateRequest speaker) {
+        return speakerRepository.create(speaker);
     }
 }
