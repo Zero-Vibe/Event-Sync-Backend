@@ -136,4 +136,58 @@ public class SessionRepository {
             dataSource.closeConnection(connection);
         }
     }
+
+    public Session update(UUID sessionId, SessionCreateRequest session) {
+        Connection connection = dataSource.getConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    UPDATE sessions SET room_id = ?::UUID, title = ?, description = ?, start_time = ?, end_time = ?, capacity = ?
+                    WHERE id = ?::UUID
+                    """
+            );
+            ps.setString(1, session.getRoomId().toString());
+            ps.setString(2, session.getTitle());
+            ps.setString(3, session.getDescription());
+            ps.setTimestamp(4, Timestamp.valueOf(session.getStartTime()));
+            ps.setTimestamp(5, Timestamp.valueOf(session.getEndTime()));
+            ps.setInt(6, session.getCapacity());
+            ps.setString(7, sessionId.toString());
+
+            PreparedStatement psSpeakers = connection.prepareStatement(
+                    """
+                    INSERT INTO session_speakers (session_id, speaker_id)
+                    VALUES (?::UUID, ?::UUID);
+                    """
+            );
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not create session");
+            }
+            PreparedStatement deletePs = connection.prepareStatement(
+                    """
+                    DELETE FROM session_speakers WHERE session_id = ?::UUID
+                    """);
+            deletePs.setString(1, sessionId.toString());
+            deletePs.executeUpdate();
+
+            psSpeakers.setString(1, sessionId.toString());
+            for (UUID speakerUUID : session.getSpeakersId()) {
+                psSpeakers.setString(2, speakerUUID.toString());
+                psSpeakers.addBatch();
+            }
+            psSpeakers.executeBatch();
+
+            connection.commit();
+
+            return findById(sessionId).get();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
+        }
+    }
 }

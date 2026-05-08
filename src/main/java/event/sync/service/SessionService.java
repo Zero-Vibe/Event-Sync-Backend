@@ -20,7 +20,7 @@ public class SessionService {
     private SessionRepository sessionRepository;
     private RoomRepository roomRepository;
 
-    public Session getSession(UUID sessionId) {
+    public Session findById(UUID sessionId) {
         return sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found: " + sessionId));
     }
@@ -33,5 +33,11 @@ public class SessionService {
         roomRepository.findById(session.getRoomId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Specified room does not exist: " + session.getRoomId()));
         return sessionRepository.create(eventId, session);
+    }
+
+    public Session updateSession(UUID eventId, SessionCreateRequest session) {
+        roomRepository.findById(session.getRoomId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Specified room does not exist: " + session.getRoomId()));
+        return sessionRepository.update(eventId, session);
     }
 }
