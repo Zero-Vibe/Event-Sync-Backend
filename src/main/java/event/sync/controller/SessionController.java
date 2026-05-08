@@ -71,8 +71,7 @@ public class SessionController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
 
-            Claims claims = jwtService.decodeToken(token);
-            String id = claims.getSubject();
+            jwtService.decodeToken(token);
 
             sessionCreateValidator.validate(session);
             eventService.findById(eventId);
@@ -101,8 +100,7 @@ public class SessionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            Claims claims = jwtService.decodeToken(token);
-            String id = claims.getSubject();
+            jwtService.decodeToken(token);
 
             sessionCreateValidator.validate(session);
             eventService.findById(eventId);
@@ -131,8 +129,7 @@ public class SessionController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
 
-            Claims claims = jwtService.decodeToken(token);
-            String id = claims.getSubject();
+            jwtService.decodeToken(token);
 
             eventService.findById(eventId);
             sessionService.findById(sessionId);
