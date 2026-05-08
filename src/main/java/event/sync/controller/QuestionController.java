@@ -63,4 +63,26 @@ public class QuestionController {
                     .body(e.getMessage());
         }
     }
-}
+
+    @GetMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}/vote")
+    public ResponseEntity<?> updateVote(@PathVariable UUID eventId,
+                                        @PathVariable UUID sessionId,
+                                        @PathVariable UUID questionId,
+                                        @RequestParam boolean vote) {
+        try {
+            eventService.findById(eventId);
+            // TODO: sessionService.findById(sessionId)
+            questionService.findById(questionId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(questionService.updateVote(questionId, vote));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getBody());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }}

@@ -21,7 +21,17 @@ public class QuestionService {
     }
 
     public Question create(UUID sessionId, QuestionCreateRequest question) {
-        return questionRepository.findById(questionRepository.create(sessionId, question))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + question));
+        return questionRepository.create(sessionId, question)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch created question"));
+    }
+    
+    public Question findById(UUID id) {
+        return questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + id));
+    }
+
+    public Question updateVote(UUID questionId, boolean vote) {
+        return questionRepository.updateVote(questionId, vote)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch updated question"));
     }
 }
