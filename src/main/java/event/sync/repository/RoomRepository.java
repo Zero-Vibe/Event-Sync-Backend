@@ -11,10 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class RoomRepository {
@@ -28,7 +25,7 @@ public class RoomRepository {
 
     private final String GET_ALL_ROOMS = "SELECT id, name, created_at, updated_at FROM rooms ";
 
-    public Optional<RoomResponse> getAllRooms(){
+    public Optional<List<RoomResponse>> getAllRooms(){
         Connection conn = dataSource.getConnection();
 
         List<RoomResponse> rooms = new ArrayList<RoomResponse>();
@@ -46,10 +43,10 @@ public class RoomRepository {
             dataSource.closeConnection(conn);
         }
 
-        return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms.get(0));
+        return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms);
     }
 
-    private final String CREATE_ROOM = "INSERT INTO rooms (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)";
+    private final String CREATE_ROOM = "INSERT INTO rooms (id, name, created_at, updated_at) VALUES (?::uuid, ?, ?, ?)";
 
     public Optional<RoomResponse> createRoom(RoomRequest roomRequest){
         Connection conn = dataSource.getConnection();

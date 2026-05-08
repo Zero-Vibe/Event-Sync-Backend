@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class RoomController {
     }
 
     @GetMapping("/rooms")
-    public ResponseEntity<Optional<RoomResponse>> getRooms() {
+    public ResponseEntity<Optional<List<RoomResponse>>> getRooms() {
         return ResponseEntity.ok(roomService.findAll());
     }
 

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class RoomService {
         this.organizerRepository = organizerRepository;
     }
 
-    public Optional<RoomResponse> findAll() {
+    public Optional<List<RoomResponse>> findAll() {
         return Optional.ofNullable(roomRepository.getAllRooms()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No Rooms found")));
     }
