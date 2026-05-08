@@ -1,6 +1,6 @@
 package event.sync.dto.speaker;
 
-import event.sync.model.enums.LinkType;
+import event.sync.model.enums.LinkPlatform;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class SpeakerLinkRequest {
-    private LinkType linkType;
+    private LinkPlatform platform;
     private String url;
     private String label;
 }

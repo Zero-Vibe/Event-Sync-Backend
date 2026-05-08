@@ -13,5 +13,5 @@ public class SpeakerCreateRequest {
     private String fullName;
     private String profilePicture;
     private String biography;
-    private List<SpeakerLinkRequest> speakerLinks;
+    private List<SpeakerLinkRequest> links;
 }

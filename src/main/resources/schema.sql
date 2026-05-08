@@ -1,10 +1,10 @@
 CREATE TYPE link_type AS ENUM (
-    'twitter',
-    'linkedin',
-    'github',
-    'youtube',
-    'website',
-    'other'
+    'TWITTER',
+    'LINKEDIN',
+    'GITHUB',
+    'YOUTUBE',
+    'WEBSITE',
+    'OTHER'
 );
 
 CREATE TABLE organizers (

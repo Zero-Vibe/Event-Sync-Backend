@@ -5,7 +5,7 @@ import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.dto.speaker.SpeakerLinkRequest;
 import event.sync.model.Speaker;
 import event.sync.model.SpeakerLink;
-import event.sync.model.enums.LinkType;
+import event.sync.model.enums.LinkPlatform;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -40,7 +40,7 @@ public class SpeakerRepository {
         return SpeakerLink.builder()
                 .id(UUID.fromString(rs.getString("id")))
                 .speakerId(UUID.fromString(rs.getString("speaker_id")))
-                .type(LinkType.valueOf(rs.getString("type")))
+                .platform(LinkPlatform.valueOf(rs.getString("type")))
                 .url(rs.getString("url"))
                 .label(rs.getString("label"))
                 .order(rs.getShort("order"))
@@ -146,7 +146,7 @@ public class SpeakerRepository {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not create speaker");
             }
             UUID speakerId = UUID.fromString(rs.getString("id"));
-            createLinks(connection, speakerId, speaker.getSpeakerLinks());
+            createLinks(connection, speakerId, speaker.getLinks());
             connection.commit();
 
             return findById(speakerId).get();
@@ -165,7 +165,7 @@ public class SpeakerRepository {
             PreparedStatement ps = connection.prepareStatement(
                     """
                     UPDATE speakers SET full_name = ?, profile_picture = ?, biography = ?
-                    WHERE id = ?;
+                    WHERE id = ?::UUID;
                     """
             );
             ps.setString(1, speaker.getFullName());
@@ -176,13 +176,13 @@ public class SpeakerRepository {
 
             PreparedStatement deleteLinks = connection.prepareStatement(
                     """
-                    DELETE FROM speaker_links WHERE id = ?::UUID
+                    DELETE FROM speaker_links WHERE speaker_id = ?::UUID
                     """
             );
             deleteLinks.setString(1, speakerId.toString());
             deleteLinks.executeUpdate();
 
-            createLinks(connection, speakerId, speaker.getSpeakerLinks());
+            createLinks(connection, speakerId, speaker.getLinks());
             connection.commit();
 
             return findById(speakerId).get();
@@ -251,7 +251,7 @@ public class SpeakerRepository {
             ps.setString(1, speakerId.toString());
 
             for (SpeakerLinkRequest speakerLink : speakerLinks) {
-                ps.setString(2, speakerLink.getLinkType().name());
+                ps.setString(2, speakerLink.getPlatform().name());
                 ps.setString(3, speakerLink.getUrl());
                 ps.setString(4, speakerLink.getLabel());
                 ps.addBatch();

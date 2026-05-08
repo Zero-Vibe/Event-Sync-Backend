@@ -1,6 +1,6 @@
 package event.sync.model.enums;
 
-public enum LinkType {
+public enum LinkPlatform {
     TWITTER,
     LINKEDIN,
     GITHUB,
