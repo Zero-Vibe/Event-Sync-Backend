@@ -46,7 +46,7 @@ public class SessionController {
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.getAllSessions(eventId));
+                    .body(sessionService.getAll(eventId));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -67,7 +67,7 @@ public class SessionController {
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.createSession(eventId, session));
+                    .body(sessionService.create(eventId, session));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -89,7 +89,27 @@ public class SessionController {
             sessionService.findById(sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.updateSession(eventId, session));
+                    .body(sessionService.update(eventId, session));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{sessionId}")
+    public ResponseEntity<?> deleteSession(@PathVariable UUID eventId,
+                                           @PathVariable UUID  sessionId) {
+        try {
+            eventService.findById(eventId);
+            sessionService.findById(sessionId);
+            sessionService.delete(sessionId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .build();
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")

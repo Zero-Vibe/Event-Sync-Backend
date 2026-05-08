@@ -190,4 +190,34 @@ public class SessionRepository {
             dataSource.closeConnection(connection);
         }
     }
+
+    public void delete(UUID sessionId) {
+        Connection connection = dataSource.getConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    DELETE FROM sessions WHERE id = ?::UUID
+                    """
+            );
+            ps.setString(1, sessionId.toString());
+
+
+            PreparedStatement deletePs = connection.prepareStatement(
+                    """
+                    DELETE FROM session_speakers WHERE session_id = ?::UUID
+                    """);
+            deletePs.setString(1, sessionId.toString());
+
+            deletePs.executeUpdate();
+            ps.executeUpdate();
+
+            connection.commit();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
+        }
+    }
 }
