@@ -41,4 +41,16 @@ public class RoomService {
         return Optional.ofNullable(roomRepository.getRoomWithDetails(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No Rooms found")));
     }
+
+    public RoomResponse updateRoom(String id, RoomRequest roomRequest) {
+        return roomRepository.updateRoom(id, roomRequest)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id));
+    }
+
+    public void deleteRoom(String id) {
+        boolean deleted = roomRepository.deleteRoom(id);
+        if (!deleted) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id);
+        }
+    }
 }
