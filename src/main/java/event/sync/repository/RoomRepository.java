@@ -35,7 +35,7 @@ public class RoomRepository {
                     FROM rooms WHERE id = ?::UUID
                     """
             );
-            ps.setObject(1, id);
+            ps.setString(1, id.toString());
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

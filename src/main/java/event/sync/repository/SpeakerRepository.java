@@ -62,12 +62,12 @@ public class SpeakerRepository {
                     WHERE s.id = ?::UUID
                     """
             );
-            ps.setObject(1, sessionId);
+            ps.setString(1, sessionId.toString());
             ResultSet rs = ps.executeQuery();
             List<Speaker> speakers = new ArrayList<>();
             while (rs.next()) {
                 Speaker speaker = rowMapper(rs);
-                linksPs.setObject(1, speaker.getId());
+                linksPs.setString(1, speaker.getId().toString());
                 ResultSet rsLinks = linksPs.executeQuery();
                 List<SpeakerLink> speakerLinks = new ArrayList<>();
                 while (rsLinks.next()) {

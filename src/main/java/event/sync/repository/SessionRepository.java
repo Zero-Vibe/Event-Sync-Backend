@@ -44,7 +44,7 @@ public class SessionRepository {
                 FROM sessions WHERE id = ?::UUID
                 """
             );
-            ps.setObject(1, id);
+            ps.setString(1, id.toString());
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -69,7 +69,7 @@ public class SessionRepository {
                     FROM sessions WHERE event_id = ?::UUID
                     """
             );
-            ps.setObject(1, eventId);
+            ps.setString(1, eventId.toString());
 
             ResultSet rs = ps.executeQuery();
             List<Session> sessions = new ArrayList<>();
