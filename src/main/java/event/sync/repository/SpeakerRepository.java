@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -54,30 +55,64 @@ public class SpeakerRepository {
                     """
             );
 
-            PreparedStatement linksPs = connection.prepareStatement(
-                    """
-                    SELECT sl.id, speaker_id, type, url, label, "order"
-                    FROM speaker_links AS sl
-                    JOIN speakers AS s ON sl.speaker_id = s.id 
-                    WHERE s.id = ?::UUID
-                    """
-            );
             ps.setString(1, sessionId.toString());
             ResultSet rs = ps.executeQuery();
             List<Speaker> speakers = new ArrayList<>();
             while (rs.next()) {
                 Speaker speaker = rowMapper(rs);
-                linksPs.setString(1, speaker.getId().toString());
-                ResultSet rsLinks = linksPs.executeQuery();
-                List<SpeakerLink> speakerLinks = new ArrayList<>();
-                while (rsLinks.next()) {
-                    SpeakerLink speakerLink = speakerLinkMapper(rsLinks);
-                    speakerLinks.add(speakerLink);
-                }
-                speaker.setLinks(speakerLinks);
+                speaker.setLinks(getSpeakerLinks(connection, speaker.getId()));
                 speakers.add(speaker);
             }
             return speakers;
+        } catch (SQLException | RuntimeException e) {
+            dataSource.closeConnection(connection);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<Speaker> findById(UUID id) {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    SELECT s.id, full_name, profile_picture, biography, created_at, updated_at
+                    FROM speakers AS s
+                    WHERE s.id = ?::UUID
+                    """
+            );
+
+            ps.setString(1, id.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Speaker speaker = rowMapper(rs);
+                speaker.setLinks(getSpeakerLinks(connection, speaker.getId()));
+                return Optional.of(speaker);
+            }
+            return Optional.empty();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.closeConnection(connection);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<SpeakerLink> getSpeakerLinks(Connection connection, UUID id) {
+        try {
+            PreparedStatement linksPs = connection.prepareStatement(
+                    """
+                    SELECT sl.id, speaker_id, type, url, label, "order"
+                    FROM speaker_links AS sl
+                    JOIN speakers AS s ON sl.speaker_id = s.id
+                    WHERE s.id = ?::UUID
+                    """
+            );
+            linksPs.setString(1, id.toString());
+            ResultSet rsLinks = linksPs.executeQuery();
+            List<SpeakerLink> speakerLinks = new ArrayList<>();
+            while (rsLinks.next()) {
+                SpeakerLink speakerLink = speakerLinkMapper(rsLinks);
+                speakerLinks.add(speakerLink);
+            }
+            return speakerLinks;
         } catch (SQLException | RuntimeException e) {
             throw new RuntimeException(e);
         }
