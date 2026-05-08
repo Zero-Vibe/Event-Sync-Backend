@@ -2,8 +2,10 @@ package event.sync.controller;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.service.EventService;
+import event.sync.service.JwtService;
 import event.sync.service.SessionService;
 import event.sync.validator.SessionCreateValidator;
+import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ public class SessionController {
     private final SessionService sessionService;
     private final EventService eventService;
     private final SessionCreateValidator sessionCreateValidator;
+    private final JwtService jwtService;
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
@@ -58,11 +61,19 @@ public class SessionController {
         }
     }
 
-    // TODO: Make these next routes require auth
     @PostMapping
     public ResponseEntity<?> createSession(@PathVariable UUID eventId,
-                                           @RequestBody SessionCreateRequest session) {
+                                           @RequestBody SessionCreateRequest session,
+                                           @RequestHeader(value = "Authorization", required = false) String token
+                                           ) {
         try {
+            if (token == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+
+            Claims claims = jwtService.decodeToken(token);
+            String id = claims.getSubject();
+
             sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -82,8 +93,17 @@ public class SessionController {
     @PutMapping("/{sessionId}")
     public ResponseEntity<?> updateSession(@PathVariable UUID eventId,
                                            @PathVariable UUID  sessionId,
-                                           @RequestBody SessionCreateRequest session) {
+                                           @RequestBody SessionCreateRequest session,
+                                           @RequestHeader(value = "Authorization", required = false) String token
+                                            ) {
         try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Claims claims = jwtService.decodeToken(token);
+            String id = claims.getSubject();
+
             sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             sessionService.findById(sessionId);
@@ -103,8 +123,17 @@ public class SessionController {
 
     @DeleteMapping("/{sessionId}")
     public ResponseEntity<?> deleteSession(@PathVariable UUID eventId,
-                                           @PathVariable UUID  sessionId) {
+                                           @PathVariable UUID  sessionId,
+                                           @RequestHeader(value = "Authorization", required = false) String token
+                                            ) {
         try {
+            if (token == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+
+            Claims claims = jwtService.decodeToken(token);
+            String id = claims.getSubject();
+
             eventService.findById(eventId);
             sessionService.findById(sessionId);
             sessionService.delete(sessionId);
@@ -117,7 +146,7 @@ public class SessionController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .header("Content-Type", "application/json")
-                    .body(e.getMessage());
+                    .body(e.getStackTrace());
         }
     }
 }
