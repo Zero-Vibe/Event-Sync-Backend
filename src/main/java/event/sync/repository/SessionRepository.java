@@ -130,6 +130,7 @@ public class SessionRepository {
 
             return findById(UUID.fromString(sessionId)).get();
         } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
             throw new RuntimeException(e);
         } finally {
             dataSource.closeConnection(connection);

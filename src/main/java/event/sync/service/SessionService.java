@@ -2,6 +2,7 @@ package event.sync.service;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.model.Session;
+import event.sync.repository.RoomRepository;
 import event.sync.repository.SessionRepository;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class SessionService {
     private SessionRepository sessionRepository;
+    private RoomRepository roomRepository;
 
     public Session getSession(UUID sessionId) {
         return sessionRepository.findById(sessionId)
@@ -28,6 +30,8 @@ public class SessionService {
     }
 
     public Session createSession(UUID eventId, SessionCreateRequest session) {
+        roomRepository.findById(session.getRoomId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Specified room does not exist: " + session.getRoomId()));
         return sessionRepository.create(eventId, session);
     }
 }

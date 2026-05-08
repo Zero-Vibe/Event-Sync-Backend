@@ -3,6 +3,7 @@ package event.sync.controller;
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.service.EventService;
 import event.sync.service.SessionService;
+import event.sync.validator.SessionCreateValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ public class SessionController {
 
     private final SessionService sessionService;
     private final EventService eventService;
+    private final SessionCreateValidator sessionCreateValidator;
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
@@ -58,9 +60,10 @@ public class SessionController {
 
     // TODO: Make these next routes require auth
     @PostMapping
-    public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
-                                              @RequestBody SessionCreateRequest session) {
+    public ResponseEntity<?> createSession(@PathVariable UUID eventId,
+                                           @RequestBody SessionCreateRequest session) {
         try {
+            sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
