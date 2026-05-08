@@ -19,19 +19,13 @@ public class OrganizerRepository {
 
     public Optional<Organizer> findByEmail(String email) {
         String sql = "SELECT id, email, password_hash, name, created_at, updated_at FROM organizers WHERE email = ?";
-
         Connection conn = dataSource.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setString(1, email);
-
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
+                if (rs.next()) return Optional.of(mapRow(rs));
                 return Optional.empty();
             }
-
         } catch (SQLException e) {
             throw new RuntimeException("Failed to find organizer by email", e);
         } finally {
@@ -39,9 +33,24 @@ public class OrganizerRepository {
         }
     }
 
+    public Optional<Organizer> findById(UUID id) {
+        String sql = "SELECT id, email, password_hash, name, created_at, updated_at FROM organizers WHERE id = ?::uuid";
+        Connection conn = dataSource.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return Optional.of(mapRow(rs));
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find organizer by id", e);
+        } finally {
+            dataSource.closeConnection(conn);
+        }
+    }
+
     public Organizer addOrganizer(Organizer organizer) {
         String sql = "INSERT INTO organizers (id, email, password_hash, name, created_at, updated_at) VALUES (?::uuid, ?, ?, ?, ?, ?)";
-
         Connection conn = dataSource.getConnection();
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, UUID.randomUUID().toString());
@@ -50,18 +59,13 @@ public class OrganizerRepository {
             statement.setString(4, organizer.getName());
             statement.setTimestamp(5, Timestamp.valueOf(organizer.getCreatedAt()));
             statement.setTimestamp(6, Timestamp.valueOf(organizer.getUpdatedAt()));
-
             statement.executeUpdate();
-
             return organizer;
-
-
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add organizer", e);
         } finally {
             dataSource.closeConnection(conn);
         }
-
     }
 
     private Organizer mapRow(ResultSet rs) throws SQLException {
