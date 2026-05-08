@@ -1,15 +1,12 @@
 package event.sync.controller;
 
+import event.sync.dto.room.RoomRequest;
 import event.sync.dto.room.RoomResponse;
-import event.sync.model.Event;
 import event.sync.service.RoomService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 public class RoomController {
@@ -24,5 +21,9 @@ public class RoomController {
         return ResponseEntity.ok(roomService.findAll());
     }
 
+    @PostMapping("/rooms")
+    public ResponseEntity<Optional<RoomResponse>> createRoom(@RequestBody RoomRequest roomRequest) {
+        return ResponseEntity.ok(roomService.createRoom(roomRequest));
+    }
 
 }

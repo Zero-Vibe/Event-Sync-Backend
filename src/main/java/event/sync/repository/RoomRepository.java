@@ -1,6 +1,7 @@
 package event.sync.repository;
 
 import event.sync.datasource.DataSourceConfig;
+import event.sync.dto.room.RoomRequest;
 import event.sync.dto.room.RoomResponse;
 import event.sync.model.Room;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,32 @@ public class RoomRepository {
 
         return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms.get(0));
     }
+
+    private final String CREATE_ROOM = "INSERT INTO rooms (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)";
+
+    public Optional<RoomResponse> createRoom(RoomRequest roomRequest){
+        Connection conn = dataSource.getConnection();
+
+        try (PreparedStatement ps = conn.prepareStatement(CREATE_ROOM)){
+            String uuid = UUID.randomUUID().toString();
+            ps.setString(1, uuid);
+            ps.setString(2, roomRequest.getName());
+            ps.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
+            ps.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+
+            ps.executeUpdate();
+
+            return Optional.ofNullable(RoomResponse.builder()
+                    .id(UUID.fromString(uuid)).name(roomRequest.getName()).build());
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }finally {
+            dataSource.closeConnection(conn);
+        }
+    }
+
+
 
     private RoomResponse RoomResponseRowMapper(ResultSet rs) throws SQLException {
         return RoomResponse.builder()
