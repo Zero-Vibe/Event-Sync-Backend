@@ -50,37 +50,6 @@ public class QuestionRepository {
         }
     }
 
-    public Optional<Question> create(UUID sessionId, QuestionCreateRequest question) {
-        Connection connection = dataSource.getConnection();
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    """
-                       INSERT INTO questions (session_id, content, author_name)
-                       VALUES (?::UUID, ?, ?)
-                       RETURNING id
-                       """);
-            ps.setString(1, sessionId.toString());
-            ps.setString(2, question.getContent());
-
-            if ((question.getAuthorName() != null)) {
-                ps.setString(3, question.getAuthorName());
-            } else {
-                ps.setNull(3, Types.VARCHAR);
-            }
-
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                throw new RuntimeException("Question could not be created");
-            }
-            return findById(UUID.fromString(rs.getString(1)));
-        } catch (SQLException | RuntimeException e) {
-            dataSource.rollback(connection);
-            throw new RuntimeException(e);
-        } finally {
-            dataSource.closeConnection(connection);
-        }
-    }
-
     public Optional<Question> findById(UUID id) {
         Connection connection = dataSource.getConnection();
         try {
@@ -102,9 +71,43 @@ public class QuestionRepository {
         }
     }
 
+    public Optional<Question> create(UUID sessionId, QuestionCreateRequest question) {
+        Connection connection = dataSource.getConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                       INSERT INTO questions (session_id, content, author_name)
+                       VALUES (?::UUID, ?, ?)
+                       RETURNING id
+                       """);
+            ps.setString(1, sessionId.toString());
+            ps.setString(2, question.getContent());
+
+            if ((question.getAuthorName() != null)) {
+                ps.setString(3, question.getAuthorName());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new RuntimeException("Question could not be created");
+            }
+            connection.commit();
+            return findById(UUID.fromString(rs.getString(1)));
+        } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
+        }
+    }
+
     public Optional<Question> updateVote(UUID questionId, boolean upvote) {
         Connection connection = dataSource.getConnection();
         try {
+            connection.setAutoCommit(false);
             PreparedStatement ps = connection.prepareStatement(
                     """
                        UPDATE questions SET upvotes = upvotes + ?
@@ -117,6 +120,7 @@ public class QuestionRepository {
             if (!rs.next()) {
                 throw new RuntimeException("Vote could not be updated");
             }
+            connection.commit();
             return findById(UUID.fromString(rs.getString(1)));
         } catch (SQLException | RuntimeException e) {
             dataSource.rollback(connection);

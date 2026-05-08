@@ -1,6 +1,6 @@
 package event.sync.model;
 
-import event.sync.model.enums.LinkType;
+import event.sync.model.enums.LinkPlatform;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class SpeakerLink {
     private UUID speakerId;
 
     @Builder.Default
-    private LinkType type = LinkType.OTHER;
+    private LinkPlatform platform = LinkPlatform.OTHER;
 
     private String url;
     private String label;

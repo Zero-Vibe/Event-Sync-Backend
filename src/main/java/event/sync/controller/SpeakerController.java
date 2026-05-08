@@ -1,37 +1,33 @@
 package event.sync.controller;
 
-import event.sync.dto.session.SessionCreateRequest;
-import event.sync.service.EventService;
+import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.service.JwtService;
-import event.sync.service.SessionService;
-import event.sync.validator.SessionCreateValidator;
-import io.jsonwebtoken.Claims;
+import event.sync.service.SpeakerService;
+import event.sync.validator.SpeakerCreateValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/events/{eventId}/sessions")
+@Controller
+@RequestMapping("/speakers")
 @AllArgsConstructor
-public class SessionController {
+public class SpeakerController {
 
-    private final SessionService sessionService;
-    private final EventService eventService;
-    private final SessionCreateValidator sessionCreateValidator;
+    private final SpeakerService speakerService;
+    private final SpeakerCreateValidator speakerCreateValidator;
     private final JwtService jwtService;
 
-    @GetMapping("/{sessionId}")
-    public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
-                                              @PathVariable UUID sessionId) {
+    @GetMapping("/{speakerId}")
+    public ResponseEntity<?> findById(@PathVariable UUID speakerId) {
         try {
-            eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.findById(sessionId));
+                    .body(speakerService.findById(speakerId));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -44,12 +40,11 @@ public class SessionController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId) {
+    public ResponseEntity<?> getAll() {
         try {
-            eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.getAll(eventId));
+                    .body(speakerService.getAll());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -62,39 +57,9 @@ public class SessionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createSession(@PathVariable UUID eventId,
-                                           @RequestBody SessionCreateRequest session,
-                                           @RequestHeader(value = "Authorization", required = false) String token
-                                           ) {
-        try {
-            if (token == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-            }
-
-            jwtService.decodeToken(token);
-
-            sessionCreateValidator.validate(session);
-            eventService.findById(eventId);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header("Content-Type", "application/json")
-                    .body(sessionService.create(eventId, session));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
-    }
-
-    @PutMapping("/{sessionId}")
-    public ResponseEntity<?> updateSession(@PathVariable UUID eventId,
-                                           @PathVariable UUID  sessionId,
-                                           @RequestBody SessionCreateRequest session,
-                                           @RequestHeader(value = "Authorization", required = false) String token
-                                            ) {
+    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker,
+                                  @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -102,12 +67,10 @@ public class SessionController {
 
             jwtService.decodeToken(token);
 
-            sessionCreateValidator.validate(session);
-            eventService.findById(eventId);
-            sessionService.findById(sessionId);
-            return ResponseEntity.status(HttpStatus.OK)
+            speakerCreateValidator.validate(speaker);
+            return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.update(sessionId, session));
+                    .body(speakerService.create(speaker));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -119,21 +82,47 @@ public class SessionController {
         }
     }
 
-    @DeleteMapping("/{sessionId}")
-    public ResponseEntity<?> deleteSession(@PathVariable UUID eventId,
-                                           @PathVariable UUID  sessionId,
-                                           @RequestHeader(value = "Authorization", required = false) String token
-                                            ) {
+    @PutMapping("/{speakerId}")
+    public ResponseEntity<?> update(@PathVariable  UUID speakerId,
+                                    @RequestBody SpeakerCreateRequest speaker,
+                                    @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
         try {
             if (token == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
             jwtService.decodeToken(token);
 
-            eventService.findById(eventId);
-            sessionService.findById(sessionId);
-            sessionService.delete(sessionId);
+            speakerCreateValidator.validate(speaker);
+            speakerService.findById(speakerId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(speakerService.update(speakerId, speaker));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{speakerId}")
+    public ResponseEntity<?> delete(@PathVariable  UUID speakerId,
+                                    @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
+        try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            jwtService.decodeToken(token);
+
+            speakerService.findById(speakerId);
+            speakerService.delete(speakerId);
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .build();
         } catch (ResponseStatusException e) {
@@ -143,7 +132,7 @@ public class SessionController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .header("Content-Type", "application/json")
-                    .body(e.getStackTrace());
+                    .body(e.getMessage());
         }
     }
 }
