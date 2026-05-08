@@ -2,6 +2,7 @@ package event.sync.controller;
 
 import event.sync.dto.room.RoomRequest;
 import event.sync.dto.room.RoomResponse;
+import event.sync.dto.room.RoomWithDetailsResponse;
 import event.sync.service.JwtService;
 import event.sync.service.RoomService;
 import io.jsonwebtoken.Claims;
@@ -36,5 +37,10 @@ public class RoomController {
         UUID organizerId = UUID.fromString(claims.getSubject());
 
         return ResponseEntity.ok(roomService.createRoom(roomRequest, organizerId));
+    }
+
+    @GetMapping("/rooms/{id}")
+    public ResponseEntity<Optional<RoomWithDetailsResponse>> getRoomWithDetails(@PathVariable String id) {
+        return ResponseEntity.ok(roomService.findRoomWithDetails(id));
     }
 }
