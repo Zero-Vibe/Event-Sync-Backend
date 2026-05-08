@@ -52,7 +52,7 @@ public class QuestionController {
             questionCreateValidator.validate(question);
             eventService.findById(eventId);
             sessionService.findById(sessionId);
-            return ResponseEntity.status(HttpStatus.OK)
+            return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(questionService.create(sessionId, question));
         } catch (ResponseStatusException e) {
@@ -66,7 +66,7 @@ public class QuestionController {
         }
     }
 
-    @GetMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}/vote")
+    @PostMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}/vote")
     public ResponseEntity<?> updateVote(@PathVariable UUID eventId,
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
