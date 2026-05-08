@@ -38,4 +38,12 @@ public class DataSourceConfig {
             }
         }
     }
+
+    public void rollback(Connection connection) {
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to rollback DB connection: " + e.getMessage(), e);
+        }
+    }
 }

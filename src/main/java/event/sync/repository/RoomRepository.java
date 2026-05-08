@@ -8,6 +8,9 @@ import event.sync.model.Room;
 import event.sync.model.Session;
 import event.sync.model.Speaker;
 import event.sync.model.enums.SessionStatus;
+import event.sync.model.Room;
+import event.sync.model.Session;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -87,6 +90,17 @@ public class RoomRepository {
     private Room RoomRowMapper(ResultSet rs) throws SQLException {
         return Room.builder()
                 .id(rs.getObject("id", UUID.class))
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+@AllArgsConstructor
+public class RoomRepository {
+    private DataSourceConfig dataSource;
+
+    private Room rowMapper(ResultSet rs) throws SQLException {
+        return Room.builder()
+                .id(UUID.fromString(rs.getString("id")))
                 .name(rs.getString("name"))
                 .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
                 .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
@@ -196,6 +210,28 @@ public class RoomRepository {
             throw new RuntimeException(e);
         } finally {
             dataSource.closeConnection(conn);
+    // Does not include sessions yet
+    public Optional<Room> findById(UUID id) {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    SELECT id, name, created_at, updated_at
+                    FROM rooms WHERE id = ?::UUID
+                    """
+            );
+            ps.setString(1, id.toString());
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Room room = rowMapper(rs);
+                return Optional.of(room);
+            }
+            return Optional.empty();
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 }
