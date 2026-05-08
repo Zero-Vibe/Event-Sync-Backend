@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-@NoArgsConstructor
 public class SessionService {
     private SessionRepository sessionRepository;
     private RoomRepository roomRepository;

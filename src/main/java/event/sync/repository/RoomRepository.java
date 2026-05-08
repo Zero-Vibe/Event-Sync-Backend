@@ -3,6 +3,7 @@ package event.sync.repository;
 import event.sync.datasource.DataSourceConfig;
 import event.sync.model.Room;
 import event.sync.model.Session;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@AllArgsConstructor
 public class RoomRepository {
     private DataSourceConfig dataSource;
 
