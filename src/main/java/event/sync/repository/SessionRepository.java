@@ -161,11 +161,8 @@ public class SessionRepository {
                     VALUES (?::UUID, ?::UUID);
                     """
             );
+            ps.executeUpdate();
 
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not create session");
-            }
             PreparedStatement deletePs = connection.prepareStatement(
                     """
                     DELETE FROM session_speakers WHERE session_id = ?::UUID

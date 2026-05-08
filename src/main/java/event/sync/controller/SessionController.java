@@ -89,7 +89,7 @@ public class SessionController {
             sessionService.findById(sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.update(eventId, session));
+                    .body(sessionService.update(sessionId, session));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
