@@ -2,6 +2,7 @@ package event.sync.exception;
 
 import event.sync.service.AuthService.InvalidCredentialsException;
 import event.sync.service.AuthService.EmailAlreadyExistsException;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,5 +23,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("code", 409, "message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<Map<String, Object>> handleJwtException(JwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("code", 401, "message", "Invalid or expired token"));
     }
 }
