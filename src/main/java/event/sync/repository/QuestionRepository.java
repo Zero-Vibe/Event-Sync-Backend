@@ -6,7 +6,6 @@ import event.sync.model.Question;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.lang.ScopedValue;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +102,7 @@ public class QuestionRepository {
         }
     }
 
-    public Optional<Question> updateVote(UUID questionId, boolean vote) {
+    public Optional<Question> updateVote(UUID questionId, boolean upvote) {
         Connection connection = dataSource.getConnection();
         try {
             PreparedStatement ps = connection.prepareStatement(
@@ -112,7 +111,7 @@ public class QuestionRepository {
                        WHERE id = ?::UUID
                        RETURNING id
                        """);
-            ps.setInt(1, vote ? +1 : -1);
+            ps.setInt(1, upvote ? +1 : -1);
             ps.setString(2, questionId.toString());
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {

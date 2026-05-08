@@ -30,8 +30,12 @@ public class QuestionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + id));
     }
 
-    public Question updateVote(UUID questionId, boolean vote) {
-        return questionRepository.updateVote(questionId, vote)
+    public Question updateVote(UUID questionId, boolean upvote) {
+        Question initialQuestion = findById(questionId);
+        if (initialQuestion.getUpvotes() <= 0 && !upvote) {
+            return initialQuestion;
+        }
+        return questionRepository.updateVote(questionId, upvote)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch updated question"));
     }
 }
