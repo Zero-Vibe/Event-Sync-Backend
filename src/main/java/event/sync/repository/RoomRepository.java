@@ -231,4 +231,39 @@ public class RoomRepository {
             dataSource.closeConnection(connection);
         }
     }
+
+    private final String UPDATE_ROOM = "UPDATE rooms SET name = ?, updated_at = ? WHERE id = ?::uuid";
+
+    public Optional<RoomResponse> updateRoom(String id, RoomRequest roomRequest) {
+        Connection conn = dataSource.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(UPDATE_ROOM)) {
+            ps.setString(1, roomRequest.getName());
+            ps.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+            ps.setString(3, id);
+            int rows = ps.executeUpdate();
+            if (rows == 0) return Optional.empty();
+            return Optional.of(RoomResponse.builder()
+                    .id(UUID.fromString(id))
+                    .name(roomRequest.getName())
+                    .build());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(conn);
+        }
+    }
+
+    private final String DELETE_ROOM = "DELETE FROM rooms WHERE id = ?::uuid";
+
+    public boolean deleteRoom(String id) {
+        Connection conn = dataSource.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(DELETE_ROOM)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(conn);
+        }
+    }
 }

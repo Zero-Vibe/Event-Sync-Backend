@@ -43,4 +43,24 @@ public class RoomController {
     public ResponseEntity<Optional<RoomWithDetailsResponse>> getRoomWithDetails(@PathVariable String id) {
         return ResponseEntity.ok(roomService.findRoomWithDetails(id));
     }
+
+    @PutMapping("/rooms/{id}")
+    public ResponseEntity<RoomResponse> updateRoom(
+            @PathVariable String id,
+            @RequestBody RoomRequest roomRequest,
+            @RequestHeader("Authorization") String token
+    ) {
+        jwtService.decodeToken(token);
+        return ResponseEntity.ok(roomService.updateRoom(id, roomRequest));
+    }
+
+    @DeleteMapping("/rooms/{id}")
+    public ResponseEntity<Void> deleteRoom(
+            @PathVariable String id,
+            @RequestHeader("Authorization") String token
+    ) {
+        jwtService.decodeToken(token);
+        roomService.deleteRoom(id);
+        return ResponseEntity.noContent().build();
+    }
 }
