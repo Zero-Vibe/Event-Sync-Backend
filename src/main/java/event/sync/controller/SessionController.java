@@ -65,7 +65,7 @@ public class SessionController {
         try {
             sessionCreateValidator.validate(session);
             eventService.findById(eventId);
-            return ResponseEntity.status(HttpStatus.OK)
+            return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(sessionService.create(eventId, session));
         } catch (ResponseStatusException e) {
