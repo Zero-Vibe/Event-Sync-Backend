@@ -8,9 +8,6 @@ import event.sync.model.Room;
 import event.sync.model.Session;
 import event.sync.model.Speaker;
 import event.sync.model.enums.SessionStatus;
-import event.sync.model.Room;
-import event.sync.model.Session;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -90,13 +87,11 @@ public class RoomRepository {
     private Room RoomRowMapper(ResultSet rs) throws SQLException {
         return Room.builder()
                 .id(rs.getObject("id", UUID.class))
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-@AllArgsConstructor
-public class RoomRepository {
-    private DataSourceConfig dataSource;
+                .name(rs.getString("name"))
+                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+                .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
+                .build();
+    }
 
     private Room rowMapper(ResultSet rs) throws SQLException {
         return Room.builder()
@@ -140,13 +135,13 @@ public class RoomRepository {
 
     private Session sessionRowMapper(ResultSet rs) throws SQLException {
         String rawStart = rs.getString("session_start_time");
-        String rawEnd   = rs.getString("session_end_time");
+        String rawEnd = rs.getString("session_end_time");
 
         return Session.builder()
                 .id(UUID.fromString(rs.getString("session_id")))
                 .title(rs.getString("session_title"))
                 .startTime(rawStart != null ? LocalDateTime.parse(rawStart, PG_TIMESTAMP) : null)
-                .endTime(rawEnd   != null ? LocalDateTime.parse(rawEnd,   PG_TIMESTAMP) : null)
+                .endTime(rawEnd != null ? LocalDateTime.parse(rawEnd, PG_TIMESTAMP) : null)
                 .status(SessionStatus.valueOf(rs.getString("session_status")))
                 .speakers(new ArrayList<>())
                 .build();
@@ -210,15 +205,17 @@ public class RoomRepository {
             throw new RuntimeException(e);
         } finally {
             dataSource.closeConnection(conn);
-    // Does not include sessions yet
+        }
+    }
+
     public Optional<Room> findById(UUID id) {
         Connection connection = dataSource.getConnection();
         try {
             PreparedStatement ps = connection.prepareStatement(
                     """
-                    SELECT id, name, created_at, updated_at
-                    FROM rooms WHERE id = ?::UUID
-                    """
+                            SELECT id, name, created_at, updated_at
+                            FROM rooms WHERE id = ?::UUID
+                            """
             );
             ps.setString(1, id.toString());
 
