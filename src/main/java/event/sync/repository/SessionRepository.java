@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,6 +51,33 @@ public class SessionRepository {
             return Optional.empty();
         } catch (SQLException | RuntimeException e) {
             throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
+        }
+    }
+
+    public List<Session> getAll(UUID eventId) {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    SELECT id, event_id, room_id, title, description, start_time, end_time, capacity, status, created_at, updated_at
+                    FROM sessions WHERE event_id = ?::UUID
+                    """
+            );
+            ps.setObject(1, eventId);
+            ResultSet rs = ps.executeQuery();
+            List<Session> sessions = new ArrayList<>();
+            while (rs.next()) {
+                Session session = rowMapper(rs);
+                session.setSpeakers(speakerRepository.getBySessionId(UUID.fromString(rs.getString("id"))));
+                sessions.add(session);
+            }
+            return sessions;
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 }

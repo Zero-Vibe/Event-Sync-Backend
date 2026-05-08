@@ -36,4 +36,22 @@ public class SessionController {
                     .body(e.getMessage());
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId) {
+        try {
+            eventService.findById(eventId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(sessionService.getAllSession(eventId));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }
 }
