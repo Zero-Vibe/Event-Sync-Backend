@@ -3,6 +3,8 @@ package event.sync.controller;
 import event.sync.dto.event.EventCreateRequest;
 import event.sync.model.Event;
 import event.sync.service.EventService;
+import event.sync.service.JwtService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +15,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/events")
-@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
+    private final JwtService jwtService;
+
+
+    public EventController(EventService eventService, JwtService jwtService) {
+        this.eventService = eventService;
+        this.jwtService = jwtService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Event>> getAll() {
@@ -31,9 +39,13 @@ public class EventController {
     @PostMapping
     public ResponseEntity<Event> create(
             @RequestBody EventCreateRequest request,
-            @RequestHeader("X-Organizer-Id") UUID organizerId
+            @RequestHeader("Authorization") String token
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.create(request, organizerId));
+        Claims claims = jwtService.decodeToken(token);
+        String id = claims.getSubject();
+
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(eventService.create(request, UUID.fromString(id)));
     }
 
     @PutMapping("/{id}")

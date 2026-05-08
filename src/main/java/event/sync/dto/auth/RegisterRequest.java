@@ -1,11 +1,14 @@
 package event.sync.dto.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+@Getter
+@Setter
+public class RegisterRequest {
     private String email;
     private String password;
+    private String name;
 }
