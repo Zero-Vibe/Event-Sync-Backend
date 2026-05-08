@@ -101,29 +101,6 @@ public class SpeakerRepository {
         }
     }
 
-    private List<SpeakerLink> getSpeakerLinks(Connection connection, UUID id) {
-        try {
-            PreparedStatement linksPs = connection.prepareStatement(
-                    """
-                    SELECT sl.id, speaker_id, type, url, label, "order"
-                    FROM speaker_links AS sl
-                    JOIN speakers AS s ON sl.speaker_id = s.id
-                    WHERE s.id = ?::UUID
-                    """
-            );
-            linksPs.setString(1, id.toString());
-            ResultSet rsLinks = linksPs.executeQuery();
-            List<SpeakerLink> speakerLinks = new ArrayList<>();
-            while (rsLinks.next()) {
-                SpeakerLink speakerLink = speakerLinkMapper(rsLinks);
-                speakerLinks.add(speakerLink);
-            }
-            return speakerLinks;
-        } catch (SQLException | RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public List<Speaker> getAll() {
         Connection connection = dataSource.getConnection();
         try {
@@ -181,29 +158,6 @@ public class SpeakerRepository {
         }
     }
 
-    private void createLinks(Connection connection, UUID speakerId, List<SpeakerLinkRequest> speakerLinks) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    """
-                    INSERT INTO speaker_links (speaker_id, type, url, label)
-                    VALUES (?::UUID, ?::link_type, ?, ?)
-                    RETURNING id;
-                    """
-            );
-            ps.setString(1, speakerId.toString());
-
-            for (SpeakerLinkRequest speakerLink : speakerLinks) {
-                ps.setString(2, speakerLink.getLinkType().name());
-                ps.setString(3, speakerLink.getUrl());
-                ps.setString(4, speakerLink.getLabel());
-                ps.addBatch();
-            }
-            ps.executeBatch();
-        } catch (SQLException | RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public Speaker update(UUID speakerId, SpeakerCreateRequest speaker) {
         Connection connection = dataSource.getConnection();
         try {
@@ -237,6 +191,89 @@ public class SpeakerRepository {
             throw new RuntimeException(e);
         } finally {
             dataSource.closeConnection(connection);
+        }
+    }
+
+    public void delete(UUID speakerId) {
+        Connection connection = dataSource.getConnection();
+        try {
+            connection.setAutoCommit(false);
+            deleteLinks(connection, speakerId);
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    DELETE FROM speakers WHERE id = ?::UUID
+                    """
+            );
+            ps.setString(1, speakerId.toString());
+            ps.executeUpdate();
+
+            connection.commit();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
+        }
+    }
+
+    private List<SpeakerLink> getSpeakerLinks(Connection connection, UUID id) {
+        try {
+            PreparedStatement linksPs = connection.prepareStatement(
+                    """
+                    SELECT sl.id, speaker_id, type, url, label, "order"
+                    FROM speaker_links AS sl
+                    JOIN speakers AS s ON sl.speaker_id = s.id
+                    WHERE s.id = ?::UUID
+                    """
+            );
+            linksPs.setString(1, id.toString());
+            ResultSet rsLinks = linksPs.executeQuery();
+            List<SpeakerLink> speakerLinks = new ArrayList<>();
+            while (rsLinks.next()) {
+                SpeakerLink speakerLink = speakerLinkMapper(rsLinks);
+                speakerLinks.add(speakerLink);
+            }
+            return speakerLinks;
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createLinks(Connection connection, UUID speakerId, List<SpeakerLinkRequest> speakerLinks) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO speaker_links (speaker_id, type, url, label)
+                    VALUES (?::UUID, ?::link_type, ?, ?)
+                    RETURNING id;
+                    """
+            );
+            ps.setString(1, speakerId.toString());
+
+            for (SpeakerLinkRequest speakerLink : speakerLinks) {
+                ps.setString(2, speakerLink.getLinkType().name());
+                ps.setString(3, speakerLink.getUrl());
+                ps.setString(4, speakerLink.getLabel());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void deleteLinks(Connection connection, UUID speakerId) {
+        try {
+            PreparedStatement deleteLinks = connection.prepareStatement(
+                    """
+                    DELETE FROM speaker_links WHERE id = ?::UUID
+                    """
+            );
+            deleteLinks.setString(1, speakerId.toString());
+            deleteLinks.executeUpdate();
+
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
         }
     }
 }

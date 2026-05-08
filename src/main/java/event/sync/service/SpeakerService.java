@@ -32,4 +32,8 @@ public class SpeakerService {
     public Speaker update(UUID id, SpeakerCreateRequest speaker) {
         return speakerRepository.update(id, speaker);
     }
+
+    public void delete(UUID id) {
+        speakerRepository.delete(id);
+    }
 }

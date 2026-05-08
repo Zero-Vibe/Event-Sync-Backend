@@ -76,9 +76,27 @@ public class SpeakerController {
                                     @RequestBody SpeakerCreateRequest speaker) {
         try {
             speakerService.findById(speakerId);
-            return ResponseEntity.status(HttpStatus.CREATED)
+            return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(speakerService.update(speakerId, speaker));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{speakerId}")
+    public ResponseEntity<?> delete(@PathVariable  UUID speakerId) {
+        try {
+            speakerService.findById(speakerId);
+            speakerService.delete(speakerId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .build();
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
