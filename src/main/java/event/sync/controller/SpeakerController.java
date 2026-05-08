@@ -1,7 +1,10 @@
 package event.sync.controller;
 
 import event.sync.dto.speaker.SpeakerCreateRequest;
+import event.sync.service.JwtService;
 import event.sync.service.SpeakerService;
+import event.sync.validator.SpeakerCreateValidator;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,13 +15,12 @@ import java.util.UUID;
 
 @Controller
 @RequestMapping("/speakers")
+@AllArgsConstructor
 public class SpeakerController {
 
     private final SpeakerService speakerService;
-
-    public SpeakerController(SpeakerService speakerService) {
-        this.speakerService = speakerService;
-    }
+    private final SpeakerCreateValidator speakerCreateValidator;
+    private final JwtService jwtService;
 
     @GetMapping("/{speakerId}")
     public ResponseEntity<?> findById(@PathVariable UUID speakerId) {
@@ -55,8 +57,17 @@ public class SpeakerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker) {
+    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker,
+                                  @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
         try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            jwtService.decodeToken(token);
+
+            speakerCreateValidator.validate(speaker);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(speakerService.create(speaker));
@@ -73,8 +84,17 @@ public class SpeakerController {
 
     @PutMapping("/{speakerId}")
     public ResponseEntity<?> update(@PathVariable  UUID speakerId,
-                                    @RequestBody SpeakerCreateRequest speaker) {
+                                    @RequestBody SpeakerCreateRequest speaker,
+                                    @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
         try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            jwtService.decodeToken(token);
+
+            speakerCreateValidator.validate(speaker);
             speakerService.findById(speakerId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -91,8 +111,16 @@ public class SpeakerController {
     }
 
     @DeleteMapping("/{speakerId}")
-    public ResponseEntity<?> delete(@PathVariable  UUID speakerId) {
+    public ResponseEntity<?> delete(@PathVariable  UUID speakerId,
+                                    @RequestHeader(value = "Authorization", required = false) String token
+                                    ) {
         try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            jwtService.decodeToken(token);
+
             speakerService.findById(speakerId);
             speakerService.delete(speakerId);
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
