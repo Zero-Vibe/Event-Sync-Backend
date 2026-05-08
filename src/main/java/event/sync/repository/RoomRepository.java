@@ -1,0 +1,67 @@
+package event.sync.repository;
+
+import event.sync.datasource.DataSourceConfig;
+import event.sync.dto.room.RoomResponse;
+import event.sync.model.Room;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public class RoomRepository {
+
+    private final DataSourceConfig dataSource;
+
+    public RoomRepository(DataSourceConfig dataSource) {
+        this.dataSource = dataSource;
+    }
+
+
+    private final String GET_ALL_ROOMS = "SELECT id, name, created_at, updated_at FROM rooms ";
+
+    public Optional<RoomResponse> getAllRooms(){
+        Connection conn = dataSource.getConnection();
+
+        List<RoomResponse> rooms = new ArrayList<RoomResponse>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(GET_ALL_ROOMS)){
+            ResultSet rs = stmt.executeQuery();
+
+            while(rs.next()){
+                rooms.add(RoomResponseRowMapper(rs));
+            }
+
+        } catch ( SQLException e) {
+            throw new RuntimeException(e);
+        }finally {
+            dataSource.closeConnection(conn);
+        }
+
+        return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms.get(0));
+    }
+
+    private RoomResponse RoomResponseRowMapper(ResultSet rs) throws SQLException {
+        return RoomResponse.builder()
+                .id(rs.getObject("id", UUID.class))
+                .name(rs.getString("name"))
+                .build();
+
+    }
+
+    private Room RoomRowMapper(ResultSet rs) throws SQLException {
+        return Room.builder()
+                .id(rs.getObject("id", UUID.class))
+                .name(rs.getString("name"))
+                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+                .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
+                .build();
+    }
+}
