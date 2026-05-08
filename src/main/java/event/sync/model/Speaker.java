@@ -24,9 +24,6 @@ public class Speaker {
     @Builder.Default
     private List<SpeakerLink> links = new ArrayList<>();
 
-    @Builder.Default
-    private List<UUID> sessionIds = new ArrayList<>();
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

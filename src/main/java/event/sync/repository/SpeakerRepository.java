@@ -1,0 +1,85 @@
+package event.sync.repository;
+
+import event.sync.datasource.DataSourceConfig;
+import event.sync.model.Speaker;
+import event.sync.model.SpeakerLink;
+import event.sync.model.enums.LinkType;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+@AllArgsConstructor
+public class SpeakerRepository {
+    private DataSourceConfig dataSource;
+
+    private Speaker rowMapper(ResultSet rs) throws SQLException {
+        return Speaker.builder()
+                .id(UUID.fromString(rs.getString("id")))
+                .fullName(rs.getString("full_name"))
+                .profilePicture(rs.getString("profile_picture"))
+                .biography(rs.getString("biography"))
+                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+                .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
+                .build();
+    }
+
+    private SpeakerLink speakerLinkMapper(ResultSet rs) throws SQLException {
+        return SpeakerLink.builder()
+                .id(UUID.fromString(rs.getString("id")))
+                .speakerId(UUID.fromString(rs.getString("speaker_id")))
+                .type(LinkType.valueOf(rs.getString("type")))
+                .url(rs.getString("url"))
+                .label(rs.getString("label"))
+                .order(rs.getShort("order"))
+                .build();
+    }
+
+    public List<Speaker> getBySessionId(UUID sessionId) {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    SELECT s.id, full_name, profile_picture, biography, created_at, updated_at
+                    FROM speakers AS s
+                    JOIN session_speakers ON s.id = speaker_id 
+                    WHERE session_id = ?::UUID
+                    """
+            );
+
+            PreparedStatement linksPs = connection.prepareStatement(
+                    """
+                    SELECT sl.id, speaker_id, type, url, label, "order"
+                    FROM speaker_links AS sl
+                    JOIN speakers AS s ON sl.speaker_id = s.id 
+                    WHERE s.id = ?::UUID
+                    """
+            );
+            ps.setObject(1, sessionId);
+            ResultSet rs = ps.executeQuery();
+            List<Speaker> speakers = new ArrayList<>();
+            while (rs.next()) {
+                Speaker speaker = rowMapper(rs);
+                linksPs.setObject(1, speaker.getId());
+                ResultSet rsLinks = linksPs.executeQuery();
+                List<SpeakerLink> speakerLinks = new ArrayList<>();
+                while (rsLinks.next()) {
+                    SpeakerLink speakerLink = speakerLinkMapper(rsLinks);
+                    speakerLinks.add(speakerLink);
+                }
+                speaker.setLinks(speakerLinks);
+                speakers.add(speaker);
+            }
+            return speakers;
+        } catch (SQLException | RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}

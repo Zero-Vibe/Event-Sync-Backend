@@ -32,9 +32,6 @@ public class Session {
     @Builder.Default
     private List<Speaker> speakers = new ArrayList<>();
 
-    @Builder.Default
-    private List<Question> questions = new ArrayList<>();
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
