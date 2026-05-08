@@ -1,5 +1,6 @@
 package event.sync.controller;
 
+import event.sync.dto.session.SessionCreateRequest;
 import event.sync.service.EventService;
 import event.sync.service.SessionService;
 import lombok.AllArgsConstructor;
@@ -43,7 +44,27 @@ public class SessionController {
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.getAllSession(eventId));
+                    .body(sessionService.getAllSessions(eventId));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
+    }
+
+    // TODO: Make these next routes require auth
+    @PostMapping
+    public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
+                                              @RequestBody SessionCreateRequest session) {
+        try {
+            eventService.findById(eventId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(sessionService.createSession(eventId, session));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")

@@ -1,5 +1,6 @@
 package event.sync.service;
 
+import event.sync.dto.session.SessionCreateRequest;
 import event.sync.model.Session;
 import event.sync.repository.SessionRepository;
 import lombok.AllArgsConstructor;
@@ -22,7 +23,11 @@ public class SessionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found: " + sessionId));
     }
 
-    public List<Session> getAllSession(UUID eventId) {
+    public List<Session> getAllSessions(UUID eventId) {
         return sessionRepository.getAll(eventId);
+    }
+
+    public Session createSession(UUID eventId, SessionCreateRequest session) {
+        return sessionRepository.create(eventId, session);
     }
 }
