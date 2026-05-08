@@ -28,4 +28,8 @@ public class SpeakerService {
     public Speaker create(SpeakerCreateRequest speaker) {
         return speakerRepository.create(speaker);
     }
+
+    public Speaker update(UUID id, SpeakerCreateRequest speaker) {
+        return speakerRepository.update(id, speaker);
+    }
 }

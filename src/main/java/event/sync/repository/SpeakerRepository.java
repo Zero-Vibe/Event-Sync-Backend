@@ -69,8 +69,9 @@ public class SpeakerRepository {
             }
             return speakers;
         } catch (SQLException | RuntimeException e) {
-            dataSource.closeConnection(connection);
             throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 
@@ -94,8 +95,9 @@ public class SpeakerRepository {
             }
             return Optional.empty();
         } catch (SQLException | RuntimeException e) {
-            dataSource.closeConnection(connection);
             throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 
@@ -141,14 +143,16 @@ public class SpeakerRepository {
             }
             return speakers;
         } catch (SQLException | RuntimeException e) {
-            dataSource.closeConnection(connection);
             throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 
     public Speaker create(SpeakerCreateRequest speaker) {
         Connection connection = dataSource.getConnection();
         try {
+            connection.setAutoCommit(false);
             PreparedStatement ps = connection.prepareStatement(
                     """
                     INSERT INTO speakers (full_name, profile_picture, biography)
@@ -166,11 +170,14 @@ public class SpeakerRepository {
             }
             UUID speakerId = UUID.fromString(rs.getString("id"));
             createLinks(connection, speakerId, speaker.getSpeakerLinks());
+            connection.commit();
 
             return findById(speakerId).get();
         } catch (SQLException | RuntimeException e) {
-            dataSource.closeConnection(connection);
+            dataSource.rollback(connection);
             throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 
@@ -194,6 +201,42 @@ public class SpeakerRepository {
             ps.executeBatch();
         } catch (SQLException | RuntimeException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Speaker update(UUID speakerId, SpeakerCreateRequest speaker) {
+        Connection connection = dataSource.getConnection();
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    UPDATE speakers SET full_name = ?, profile_picture = ?, biography = ?
+                    WHERE id = ?;
+                    """
+            );
+            ps.setString(1, speaker.getFullName());
+            ps.setString(2, speaker.getProfilePicture());
+            ps.setString(3, speaker.getBiography());
+            ps.setString(4, speakerId.toString());
+            ps.executeUpdate();
+
+            PreparedStatement deleteLinks = connection.prepareStatement(
+                    """
+                    DELETE FROM speaker_links WHERE id = ?::UUID
+                    """
+            );
+            deleteLinks.setString(1, speakerId.toString());
+            deleteLinks.executeUpdate();
+
+            createLinks(connection, speakerId, speaker.getSpeakerLinks());
+            connection.commit();
+
+            return findById(speakerId).get();
+        } catch (SQLException | RuntimeException e) {
+            dataSource.rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            dataSource.closeConnection(connection);
         }
     }
 }
