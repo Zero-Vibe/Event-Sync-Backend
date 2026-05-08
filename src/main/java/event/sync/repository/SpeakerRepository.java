@@ -117,4 +117,28 @@ public class SpeakerRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public List<Speaker> getAll() {
+        Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    SELECT s.id, full_name, profile_picture, biography, created_at, updated_at
+                    FROM speakers AS s
+                    """
+            );
+
+            ResultSet rs = ps.executeQuery();
+            List<Speaker> speakers = new ArrayList<>();
+            while (rs.next()) {
+                Speaker speaker = rowMapper(rs);
+                speaker.setLinks(getSpeakerLinks(connection, speaker.getId()));
+                speakers.add(speaker);
+            }
+            return speakers;
+        } catch (SQLException | RuntimeException e) {
+            dataSource.closeConnection(connection);
+            throw new RuntimeException(e);
+        }
+    }
 }
