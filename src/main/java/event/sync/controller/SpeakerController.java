@@ -16,6 +16,7 @@ import java.util.UUID;
 @Controller
 @RequestMapping("/speakers")
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class SpeakerController {
 
     private final SpeakerService speakerService;

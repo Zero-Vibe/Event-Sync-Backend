@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/events")
+@CrossOrigin(origins = "*")
 public class EventController {
 
     private final EventService eventService;

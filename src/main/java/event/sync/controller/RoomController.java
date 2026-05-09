@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin(origins = "*")
 public class RoomController {
     private final RoomService roomService;
     private final JwtService jwtService;
