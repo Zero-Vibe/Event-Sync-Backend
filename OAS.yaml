@@ -628,7 +628,7 @@ paths:
         "403":
           description: Session not live — cannot submit a question
 
-  /events/{eventId}/sessions/{sessionId}/questions/{questionId}/upvote:
+  /events/{eventId}/sessions/{sessionId}/questions/{questionId}/vote:
     parameters:
       - name: eventId
         in: path
@@ -648,6 +648,11 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: upvote
+        in: query
+        required: true
+        schema:
+          type: boolean
 
     post:
       summary: Upvote a question
