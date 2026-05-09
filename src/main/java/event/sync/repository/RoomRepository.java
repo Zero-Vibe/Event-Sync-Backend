@@ -7,7 +7,6 @@ import event.sync.dto.room.RoomWithDetailsResponse;
 import event.sync.model.Room;
 import event.sync.model.Session;
 import event.sync.model.Speaker;
-import event.sync.model.enums.SessionStatus;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -110,7 +109,6 @@ public class RoomRepository {
                     s.title            AS session_title,
                     s.start_time::TEXT AS session_start_time,
                     s.end_time::TEXT   AS session_end_time,
-                    s.status           AS session_status,
                     sp.id::TEXT        AS speaker_id,
                     sp.full_name       AS speaker_full_name,
                     sp.profile_picture AS speaker_profile_picture
@@ -142,7 +140,6 @@ public class RoomRepository {
                 .title(rs.getString("session_title"))
                 .startTime(rawStart != null ? LocalDateTime.parse(rawStart, PG_TIMESTAMP) : null)
                 .endTime(rawEnd != null ? LocalDateTime.parse(rawEnd, PG_TIMESTAMP) : null)
-                .status(SessionStatus.valueOf(rs.getString("session_status")))
                 .speakers(new ArrayList<>())
                 .build();
     }

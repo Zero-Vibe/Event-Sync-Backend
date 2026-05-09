@@ -63,7 +63,6 @@ CREATE TABLE sessions (
                           start_time   TIMESTAMP    NOT NULL,
                           end_time     TIMESTAMP    NOT NULL,
                           capacity     INTEGER      CHECK (capacity > 0),
-                          status       VARCHAR(20)  NOT NULL DEFAULT 'DRAFT',
                           created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
                           updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
                           CONSTRAINT chk_session_times CHECK (end_time > start_time)
