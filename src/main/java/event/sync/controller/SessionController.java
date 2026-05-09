@@ -17,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/events/{eventId}/sessions")
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class SessionController {
 
     private final SessionService sessionService;

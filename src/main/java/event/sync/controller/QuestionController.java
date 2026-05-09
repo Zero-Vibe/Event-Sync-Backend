@@ -17,6 +17,7 @@ import java.util.UUID;
 @Controller
 @RequestMapping("/events")
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class QuestionController {
 
     private final QuestionService questionService;
