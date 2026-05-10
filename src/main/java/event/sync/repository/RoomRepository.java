@@ -114,10 +114,10 @@ public class RoomRepository {
                     sp.id::TEXT        AS speaker_id,
                     sp.full_name       AS speaker_full_name,
                     sp.profile_picture AS speaker_profile_picture
-                FROM sessions s
-                JOIN rooms r             ON r.id = s.room_id
-                JOIN session_speakers ss ON ss.session_id = s.id
-                JOIN speakers sp         ON sp.id = ss.speaker_id
+                FROM rooms r
+                LEFT JOIN sessions s             ON s.room_id = r.id
+                LEFT JOIN session_speakers ss ON ss.session_id = s.id
+                LEFT JOIN speakers sp         ON sp.id = ss.speaker_id
                 WHERE r.id = ?::UUID;
             """;
 

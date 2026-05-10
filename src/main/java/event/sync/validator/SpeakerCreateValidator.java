@@ -21,6 +21,8 @@ public class SpeakerCreateValidator {
         if (speaker.getBiography() == null || speaker.getBiography().isEmpty()) {
             errors.add("Biography is required");
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.join(", ", errors));
+        if (!errors.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.join(", ", errors));
+        }
     }
 }
