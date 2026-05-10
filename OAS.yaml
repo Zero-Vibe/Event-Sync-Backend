@@ -6,7 +6,7 @@ info:
   contact:
     name: EventSync
 servers:
-  - url: http://event-sync-backend-production.up.railway.app
+  - url: https://event-sync-backend-production.up.railway.app
     description: Production server
   - url: http://localhost:8080
     description: Local development server
