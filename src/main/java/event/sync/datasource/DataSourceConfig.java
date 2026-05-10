@@ -15,7 +15,7 @@ public class DataSourceConfig {
     private final String password;
 
     public DataSourceConfig() {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         this.url = dotenv.get("JDBC_URL");
         this.user = dotenv.get("JDBC_USER");
         this.password = dotenv.get("JDBC_PASSWORD");

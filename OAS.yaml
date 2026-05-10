@@ -6,9 +6,9 @@ info:
   contact:
     name: EventSync
 servers:
-  - url: https://api.eventsync.io/v1
+  - url: http://event-sync-backend-production.up.railway.app
     description: Production server
-  - url: http://localhost:3000/v1
+  - url: http://localhost:8080
     description: Local development server
 
 # ─────────────────────────────────────────
@@ -277,6 +277,20 @@ components:
           format: password
       required: [ email, password ]
 
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        name:
+          type: string
+          format: name
+      required: [ email, password, name ]
+
     LoginResponse:
       type: object
       properties:
@@ -303,8 +317,33 @@ components:
 # PATHS
 # ─────────────────────────────────────────
 paths:
-
   # ── AUTH ─────────────────────────────────
+  /auth/register:
+    post:
+      summary: Register a new organizer
+      tags: [ Auth ]
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Register successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "409":
+          description: Email is already used
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /auth/login:
     post:
       summary: Organizer login
