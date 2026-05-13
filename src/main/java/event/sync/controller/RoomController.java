@@ -6,11 +6,10 @@ import event.sync.dto.room.RoomWithDetailsResponse;
 import event.sync.service.JwtService;
 import event.sync.service.RoomService;
 import io.jsonwebtoken.Claims;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 @RestController
@@ -25,43 +24,105 @@ public class RoomController {
     }
 
     @GetMapping("/rooms")
-    public ResponseEntity<Optional<List<RoomResponse>>> getRooms() {
-        return ResponseEntity.ok(roomService.findAll());
+    public ResponseEntity<?> getRooms() {
+        try {
+            return ResponseEntity.ok(roomService.findAll());
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
     }
 
     @PostMapping("/rooms")
-    public ResponseEntity<Optional<RoomResponse>> createRoom(
+    public ResponseEntity<?> createRoom(
             @RequestBody RoomRequest roomRequest,
             @RequestHeader("Authorization") String token
     ) {
-        Claims claims = jwtService.decodeToken(token);
-        UUID organizerId = UUID.fromString(claims.getSubject());
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        return ResponseEntity.ok(roomService.createRoom(roomRequest, organizerId));
+        try {
+            Claims claims = jwtService.decodeToken(token);
+            UUID organizerId = UUID.fromString(claims.getSubject());
+
+            return ResponseEntity.ok(roomService.createRoom(roomRequest, organizerId));
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
     }
 
     @GetMapping("/rooms/{id}")
-    public ResponseEntity<Optional<RoomWithDetailsResponse>> getRoomWithDetails(@PathVariable String id) {
-        return ResponseEntity.ok(roomService.findRoomWithDetails(id));
+    public ResponseEntity<?> getRoomWithDetails(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(roomService.findRoomWithDetails(id));
+        }  catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body((e.getReason()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
     }
 
     @PutMapping("/rooms/{id}")
-    public ResponseEntity<RoomResponse> updateRoom(
+    public ResponseEntity<?> updateRoom(
             @PathVariable String id,
             @RequestBody RoomRequest roomRequest,
             @RequestHeader("Authorization") String token
     ) {
-        jwtService.decodeToken(token);
-        return ResponseEntity.ok(roomService.updateRoom(id, roomRequest));
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            jwtService.decodeToken(token);
+            return ResponseEntity.ok(roomService.updateRoom(id, roomRequest));
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/rooms/{id}")
-    public ResponseEntity<Void> deleteRoom(
+    public ResponseEntity<?> deleteRoom(
             @PathVariable String id,
             @RequestHeader("Authorization") String token
     ) {
-        jwtService.decodeToken(token);
-        roomService.deleteRoom(id);
-        return ResponseEntity.noContent().build();
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            jwtService.decodeToken(token);
+            roomService.deleteRoom(id);
+            return ResponseEntity.status(204).build();
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .header("Content-Type", "application/json")
+                    .body(e.getReason());
+        }catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(e.getMessage());
+        }
     }
 }
