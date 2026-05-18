@@ -41,10 +41,10 @@ components:
           example: "DevConf 2025"
         description:
           type: string
-        start_date:
+        startDate:
           type: string
           format: date-time
-        end_date:
+        endDate:
           type: string
           format: date-time
         location:
@@ -54,7 +54,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SessionSummary"
-      required: [ id, title, start_date, end_date, location ]
+      required: [ id, title, startDate, endDate, location ]
 
     EventCreate:
       type: object
@@ -63,15 +63,15 @@ components:
           type: string
         description:
           type: string
-        start_date:
+        startDate:
           type: string
           format: date-time
-        end_date:
+        endDate:
           type: string
           format: date-time
         location:
           type: string
-      required: [ title, start_date, end_date, location ]
+      required: [ title, startDate, endDate, location ]
 
     # ── SESSION ──────────────────────────────
     Session:
@@ -84,28 +84,28 @@ components:
           type: string
         description:
           type: string
-        start_time:
+        starttime:
           type: string
           format: date-time
-        end_time:
+        endtime:
           type: string
           format: date-time
         capacity:
           type: integer
           description: Informational value only
-        is_live:
+        isLive:
           type: boolean
-          description: True if current time is between start_time and end_time
+          description: True if current time is between starttime and endtime
         room:
           $ref: "#/components/schemas/Room"
         speakers:
           type: array
           items:
             $ref: "#/components/schemas/SpeakerSummary"
-        event_id:
+        eventId:
           type: string
           format: uuid
-      required: [ id, title, start_time, end_time, room, speakers, event_id ]
+      required: [ id, title, starttime, endtime, room, speakers, eventId ]
 
     SessionSummary:
       type: object
@@ -115,13 +115,13 @@ components:
           format: uuid
         title:
           type: string
-        start_time:
+        starttime:
           type: string
           format: date-time
-        end_time:
+        endtime:
           type: string
           format: date-time
-        is_live:
+        isLive:
           type: boolean
         room:
           $ref: "#/components/schemas/Room"
@@ -137,24 +137,24 @@ components:
           type: string
         description:
           type: string
-        start_time:
+        starttime:
           type: string
           format: date-time
-        end_time:
+        endtime:
           type: string
           format: date-time
         capacity:
           type: integer
-        room_id:
+        roomId:
           type: string
           format: uuid
-        speaker_ids:
+        speakerIds:
           type: array
           items:
             type: string
             format: uuid
           minItems: 1
-      required: [ title, start_time, end_time, room_id, speaker_ids ]
+      required: [ title, starttime, endtime, roomId, speakerIds ]
 
     # ── ROOM ────────────────────────────────
     Room:
@@ -182,14 +182,14 @@ components:
         id:
           type: string
           format: uuid
-        full_name:
+        fullName:
           type: string
-        profile_picture:
+        profilePicture:
           type: string
           format: uri
         biography:
           type: string
-        external_links:
+        externalLinks:
           type: array
           items:
             type: string
@@ -198,7 +198,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SessionSummary"
-      required: [ id, full_name ]
+      required: [ id, fullName ]
 
     SpeakerSummary:
       type: object
@@ -206,28 +206,28 @@ components:
         id:
           type: string
           format: uuid
-        full_name:
+        fullName:
           type: string
-        profile_picture:
+        profilePicture:
           type: string
           format: uri
 
     SpeakerCreate:
       type: object
       properties:
-        full_name:
+        fullName:
           type: string
-        profile_picture:
+        profilePicture:
           type: string
           format: uri
         biography:
           type: string
-        external_links:
+        externalLinks:
           type: array
           items:
             type: string
             format: uri
-      required: [ full_name ]
+      required: [ fullName ]
 
     # ── QUESTION ─────────────────────────────
     Question:
@@ -238,20 +238,20 @@ components:
           format: uuid
         content:
           type: string
-        author_name:
+        authorName:
           type: string
           nullable: true
           description: Null if anonymous
         upvotes:
           type: integer
           default: 0
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        session_id:
+        sessionId:
           type: string
           format: uuid
-      required: [ id, content, upvotes, created_at, session_id ]
+      required: [ id, content, upvotes, createdAt, sessionId ]
 
     QuestionCreate:
       type: object
@@ -259,7 +259,7 @@ components:
         content:
           type: string
           minLength: 1
-        author_name:
+        authorName:
           type: string
           nullable: true
           description: Optional — anonymous if omitted
@@ -294,12 +294,12 @@ components:
     LoginResponse:
       type: object
       properties:
-        access_token:
+        accessToken:
           type: string
-        token_type:
+        tokenType:
           type: string
           example: "bearer"
-        expires_in:
+        expiresIn:
           type: integer
           example: 3600
 
@@ -404,9 +404,9 @@ paths:
         "401":
           description: Unauthorized
 
-  /events/{event_id}:
+  /events/{eventId}:
     parameters:
-      - name: event_id
+      - name: eventId
         in: path
         required: true
         schema:
@@ -463,9 +463,9 @@ paths:
           description: Event not found
 
   # ── SESSIONS ─────────────────────────────
-  /events/{event_id}/sessions:
+  /events/{eventId}/sessions:
     parameters:
-      - name: event_id
+      - name: eventId
         in: path
         required: true
         schema:
@@ -476,7 +476,7 @@ paths:
       summary: List sessions for an event
       tags: [ Sessions ]
       parameters:
-        - name: room_id
+        - name: roomId
           in: query
           schema:
             type: string
@@ -518,15 +518,15 @@ paths:
         "401":
           description: Unauthorized
 
-  /events/{event_id}/sessions/{session_id}:
+  /events/{eventId}/sessions/{sessionId}:
     parameters:
-      - name: event_id
+      - name: eventId
         in: path
         required: true
         schema:
           type: string
           format: uuid
-      - name: session_id
+      - name: sessionId
         in: path
         required: true
         schema:
@@ -579,15 +579,15 @@ paths:
           description: Unauthorized
 
   # ── QUESTIONS ────────────────────────────
-  /events/{event_id}/sessions/{session_id}/questions:
+  /events/{eventId}/sessions/{sessionId}/questions:
     parameters:
-      - name: event_id
+      - name: eventId
         in: path
         required: true
         schema:
           type: string
           format: uuid
-      - name: session_id
+      - name: sessionId
         in: path
         required: true
         schema:
@@ -628,26 +628,31 @@ paths:
         "403":
           description: Session not live — cannot submit a question
 
-  /events/{event_id}/sessions/{session_id}/questions/{question_id}/upvote:
+  /events/{eventId}/sessions/{sessionId}/questions/{questionId}/vote:
     parameters:
-      - name: event_id
+      - name: eventId
         in: path
         required: true
         schema:
           type: string
           format: uuid
-      - name: session_id
+      - name: sessionId
         in: path
         required: true
         schema:
           type: string
           format: uuid
-      - name: question_id
+      - name: questionId
         in: path
         required: true
         schema:
           type: string
           format: uuid
+      - name: upvote
+        in: query
+        required: true
+        schema:
+          type: boolean
 
     post:
       summary: Upvote a question
@@ -698,9 +703,9 @@ paths:
         "401":
           description: Unauthorized
 
-  /rooms/{room_id}:
+  /rooms/{roomId}:
     parameters:
-      - name: room_id
+      - name: roomId
         in: path
         required: true
         schema:
@@ -789,9 +794,9 @@ paths:
         "401":
           description: Unauthorized
 
-  /speakers/{speaker_id}:
+  /speakers/{speakerId}:
     parameters:
-      - name: speaker_id
+      - name: speakerId
         in: path
         required: true
         schema:
