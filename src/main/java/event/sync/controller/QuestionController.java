@@ -1,6 +1,7 @@
 package event.sync.controller;
 
 import event.sync.dto.question.QuestionCreateRequest;
+import event.sync.model.Session;
 import event.sync.service.EventService;
 import event.sync.service.QuestionService;
 import event.sync.service.SessionService;
@@ -52,7 +53,12 @@ public class QuestionController {
         try {
             questionCreateValidator.validate(question);
             eventService.findById(eventId);
-            sessionService.findById(sessionId);
+            Session session = sessionService.findById(sessionId);
+            if (session.isLive()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body("You cannot vote anymore");
+            }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(questionService.create(sessionId, question));
@@ -74,7 +80,12 @@ public class QuestionController {
                                         @RequestParam boolean upvote) {
         try {
             eventService.findById(eventId);
-            sessionService.findById(sessionId);
+            Session session = sessionService.findById(sessionId);
+            if (session.isLive()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body("You cannot vote anymore");
+            }
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(questionService.updateVote(questionId, upvote));
