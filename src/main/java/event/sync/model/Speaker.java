@@ -1,29 +1,38 @@
 package event.sync.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "speakers")
 public class Speaker {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String fullName;
-    private String profilePicture;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column
+    private String lastName;
+
+    @Column(nullable = false)
+    private String pictureUrl;
+
+    @Column(length = 500)
     private String biography;
 
     @Builder.Default
+    @OneToMany(mappedBy = "speaker", fetch = FetchType.LAZY)
     private List<SpeakerLink> links = new ArrayList<>();
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
