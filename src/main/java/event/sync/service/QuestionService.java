@@ -1,41 +1,54 @@
 package event.sync.service;
 
 import event.sync.dto.question.QuestionCreateRequest;
+import event.sync.exception.NotFoundException;
 import event.sync.model.Question;
+import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
+import event.sync.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class QuestionService {
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
 
     public List<Question> getSessionQuestions(UUID sessionId) {
-        return questionRepository.getSessionQuestions(sessionId);
+        return questionRepository.getQuestionsBySession_Id(sessionId);
     }
 
-    public Question create(UUID sessionId, QuestionCreateRequest question) {
-        return questionRepository.create(sessionId, question)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch created question"));
+    @Transactional
+    public Question save(Session session, QuestionCreateRequest question) throws NotFoundException {
+        return questionRepository.save(Question.builder()
+                        .session(session)
+                        .content(question.getContent())
+                        .user((question.getAuthorName() == null || question.getAuthorName().isBlank())
+                                ? userRepository.findByName(question.getAuthorName())
+                                    .orElseThrow(() -> new NotFoundException("Specified user not found"))
+                                : null)
+                        .upvotes(0)
+                        .createdAt(LocalDateTime.now())
+                        .build());
     }
-    
-    public Question findById(UUID id) {
+
+    public Question findById(UUID id) throws NotFoundException {
         return questionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Question not found: " + id));
     }
 
-    public Question updateVote(UUID questionId, boolean upvote) {
+    @Transactional
+    public int updateVote(UUID questionId, boolean upvote) throws NotFoundException {
         Question initialQuestion = findById(questionId);
         if (initialQuestion.getUpvotes() <= 0 && !upvote) {
-            return initialQuestion;
+            return 0;
         }
-        return questionRepository.updateVote(questionId, upvote)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch updated question"));
+        return questionRepository.updateVote(questionId, upvote);
     }
 }

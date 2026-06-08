@@ -1,38 +1,33 @@
 package event.sync.service;
 
 import event.sync.dto.auth.*;
-import event.sync.model.Organizer;
-import event.sync.repository.OrganizerRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import event.sync.model.User;
+import event.sync.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    private final OrganizerRepository organizerRepository;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
 
-    public AuthService(OrganizerRepository organizerRepository, JwtService jwtService) {
-        this.organizerRepository = organizerRepository;
-        this.jwtService = jwtService;
-    }
-
     public LoginResponse login(LoginRequest request) {
-        Organizer organizer = organizerRepository
+        User user = userRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!BCrypt.checkpw(request.getPassword(), organizer.getPasswordHash())) {
+        if (!BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
-        String token = jwtService.generateToken(organizer.getId(), organizer.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.isAdmin(), user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(token)
@@ -41,32 +36,34 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public LoginResponse register(RegisterRequest request) {
-        if (organizerRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("Email already registered");
         }
 
         String passwordHash = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
 
-        LocalDateTime now = LocalDateTime.now();
-        Organizer organizer = Organizer.builder()
-                .id(UUID.randomUUID())
+        User user = userRepository.save(User.builder()
+                .isAdmin(false)
                 .email(request.getEmail())
                 .passwordHash(passwordHash)
                 .name(request.getName())
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+                .joinDate(LocalDateTime.now())
+                .build()
+        );
 
-        organizerRepository.addOrganizer(organizer);
-
-        String token = jwtService.generateToken(organizer.getId(), organizer.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.isAdmin(), user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(token)
                 .tokenType("bearer")
                 .expiresIn(jwtService.getExpirationSeconds())
                 .build();
+    }
+
+    public void checkIfAdmin(Claims claims) {
+        if (!claims.get("isAdmin").equals(Boolean.TRUE)) throw new InvalidCredentialsException();
     }
 
     public static class InvalidCredentialsException extends RuntimeException {

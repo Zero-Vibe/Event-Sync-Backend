@@ -2,55 +2,59 @@ package event.sync.service;
 
 import event.sync.dto.room.RoomRequest;
 import event.sync.dto.room.RoomResponse;
-import event.sync.dto.room.RoomWithDetailsResponse;
-import event.sync.repository.OrganizerRepository;
+import event.sync.exception.NotFoundException;
+import event.sync.model.Room;
 import event.sync.repository.RoomRepository;
-import org.jspecify.annotations.Nullable;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class RoomService {
     private final RoomRepository roomRepository;
-    private final OrganizerRepository organizerRepository;
 
-    public RoomService(RoomRepository roomRepository, OrganizerRepository organizerRepository) {
-        this.roomRepository = roomRepository;
-        this.organizerRepository = organizerRepository;
+    public List<RoomResponse> findAll() {
+        return roomRepository.findAll()
+                .stream()
+                .map(RoomResponse::fromRoom)
+                .toList();
     }
 
-    public Optional<List<RoomResponse>> findAll() {
-        return Optional.ofNullable(roomRepository.getAllRooms()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No Rooms found")));
-    }
-
-    public Optional<RoomResponse> createRoom(RoomRequest roomRequest, UUID organizerId) {
-        organizerRepository.findById(organizerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Organizer not found"));
-
-        return Optional.ofNullable(roomRepository.createRoom(roomRequest))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room Not Created"));
-    }
-
-    public  Optional<RoomWithDetailsResponse> findRoomWithDetails(String id) {
-        return Optional.ofNullable(roomRepository.getRoomWithDetails(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No Rooms found")));
-    }
-
-    public RoomResponse updateRoom(String id, RoomRequest roomRequest) {
-        return roomRepository.updateRoom(id, roomRequest)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id));
-    }
-
-    public void deleteRoom(String id) {
-        boolean deleted = roomRepository.deleteRoom(id);
-        if (!deleted) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id);
+    @Transactional
+    public RoomResponse save(RoomRequest roomRequest) {
+        if (roomRepository.findByName(roomRequest.getName()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Room already exists");
         }
+        Room room = Room.builder()
+                .name(roomRequest.getName())
+                .sessions(new ArrayList<>())
+                .build();
+
+        return RoomResponse.fromRoom(roomRepository.save(room));
+    }
+
+    public Room findById(UUID id) throws NotFoundException {
+        return roomRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Room not found"));
+    }
+
+    @Transactional
+    public Room update(UUID id, RoomRequest roomRequest) throws NotFoundException {
+        Room room = findById(id);
+        room.setName(roomRequest.getName() == null ||  roomRequest.getName().isBlank() ? room.getName() : roomRequest.getName());
+        return roomRepository.save(room);
+    }
+
+    @Transactional
+    public void delete(UUID id) throws NotFoundException {
+        findById(id);
+        roomRepository.deleteById(id);
     }
 }
