@@ -1,11 +1,13 @@
 package event.sync.controller;
 
 import event.sync.dto.room.RoomRequest;
-import event.sync.dto.room.RoomResponse;
-import event.sync.dto.room.RoomWithDetailsResponse;
+import event.sync.exception.NotFoundException;
+import event.sync.repository.UserRepository;
+import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import event.sync.service.RoomService;
 import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,19 +16,19 @@ import java.util.UUID;
 
 @RestController
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class RoomController {
     private final RoomService roomService;
     private final JwtService jwtService;
-
-    public RoomController(RoomService roomService, JwtService jwtService) {
-        this.roomService = roomService;
-        this.jwtService = jwtService;
-    }
+    private final UserRepository userRepository;
+    private final AuthService authService;
 
     @GetMapping("/rooms")
     public ResponseEntity<?> getRooms() {
         try {
-            return ResponseEntity.ok(roomService.findAll());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(roomService.findAll());
         } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -49,9 +51,14 @@ public class RoomController {
 
         try {
             Claims claims = jwtService.decodeToken(token);
-            UUID organizerId = UUID.fromString(claims.getSubject());
+            authService.checkIfAdmin(claims);
 
-            return ResponseEntity.ok(roomService.createRoom(roomRequest, organizerId));
+            userRepository.findById(UUID.fromString(claims.getSubject())).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")
+            );
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .header("Content-Type", "application/json")
+                    .body(roomService.save(roomRequest));
         } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -64,9 +71,11 @@ public class RoomController {
     }
 
     @GetMapping("/rooms/{id}")
-    public ResponseEntity<?> getRoomWithDetails(@PathVariable String id) {
+    public ResponseEntity<?> getRoomWithDetails(@PathVariable UUID id) throws NotFoundException {
         try {
-            return ResponseEntity.ok(roomService.findRoomWithDetails(id));
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(roomService.findById(id));
         }  catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -80,17 +89,21 @@ public class RoomController {
 
     @PutMapping("/rooms/{id}")
     public ResponseEntity<?> updateRoom(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestBody RoomRequest roomRequest,
             @RequestHeader("Authorization") String token
-    ) {
+    ) throws NotFoundException {
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
-            jwtService.decodeToken(token);
-            return ResponseEntity.ok(roomService.updateRoom(id, roomRequest));
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(roomService.update(id, roomRequest));
         } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -104,17 +117,19 @@ public class RoomController {
 
     @DeleteMapping("/rooms/{id}")
     public ResponseEntity<?> deleteRoom(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestHeader("Authorization") String token
-    ) {
+    ) throws NotFoundException {
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
-            jwtService.decodeToken(token);
-            roomService.deleteRoom(id);
-            return ResponseEntity.status(204).build();
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
+
+            roomService.delete(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")

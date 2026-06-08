@@ -1,7 +1,10 @@
 package event.sync.controller;
 
 import event.sync.dto.event.EventCreateRequest;
+import event.sync.exception.BadRequestException;
+import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
+import event.sync.service.AuthService;
 import event.sync.service.EventService;
 import event.sync.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -16,16 +19,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/events")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
     private final JwtService jwtService;
-
-
-    public EventController(EventService eventService, JwtService jwtService) {
-        this.eventService = eventService;
-        this.jwtService = jwtService;
-    }
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<List<Event>> getAll() {
@@ -33,33 +32,49 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(eventService.findById(id));
+    public ResponseEntity<Event> getById(@PathVariable UUID id) throws NotFoundException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(eventService.findById(id));
     }
 
     @PostMapping
     public ResponseEntity<Event> create(
             @RequestBody EventCreateRequest request,
             @RequestHeader("Authorization") String token
-    ) {
+    ) throws NotFoundException, BadRequestException {
         Claims claims = jwtService.decodeToken(token);
-        String id = claims.getSubject();
-
-        return ResponseEntity.status(HttpStatus.CREATED).
-                body(eventService.create(request, UUID.fromString(id)));
+        authService.checkIfAdmin(claims);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Content-Type", "application/json")
+                .body(eventService.create(request,
+                        UUID.fromString(claims.getSubject())
+                ));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Event> update(
             @PathVariable UUID id,
-            @RequestBody EventCreateRequest request
-    ) {
-        return ResponseEntity.ok(eventService.update(id, request));
+            @RequestBody EventCreateRequest request,
+            @RequestHeader("Authorization") String token
+    )  throws NotFoundException, BadRequestException {
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(eventService.update(request,
+                        id
+                ));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String token
+    ) throws NotFoundException {
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
         eventService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

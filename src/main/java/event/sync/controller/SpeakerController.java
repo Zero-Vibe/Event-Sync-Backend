@@ -1,10 +1,13 @@
 package event.sync.controller;
 
-import event.sync.dto.speaker.SpeakerCreateRequest;
+import event.sync.exception.NotFoundException;
+import event.sync.model.Speaker;
+import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import event.sync.service.SpeakerService;
 import event.sync.validator.SpeakerCreateValidator;
-import lombok.AllArgsConstructor;
+import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,16 +18,17 @@ import java.util.UUID;
 
 @Controller
 @RequestMapping("/speakers")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class SpeakerController {
 
     private final SpeakerService speakerService;
     private final SpeakerCreateValidator speakerCreateValidator;
     private final JwtService jwtService;
+    private final AuthService authService;
 
     @GetMapping("/{speakerId}")
-    public ResponseEntity<?> findById(@PathVariable UUID speakerId) {
+    public ResponseEntity<?> findById(@PathVariable UUID speakerId) throws NotFoundException {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -58,7 +62,7 @@ public class SpeakerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker,
+    public ResponseEntity<?> save(@RequestBody Speaker speaker,
                                   @RequestHeader(value = "Authorization", required = false) String token
                                     ) {
         try {
@@ -66,9 +70,10 @@ public class SpeakerController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
-            speakerCreateValidator.validate(speaker);
+            // speakerCreateValidator.validate(speaker);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(speakerService.create(speaker));
@@ -85,17 +90,18 @@ public class SpeakerController {
 
     @PutMapping("/{speakerId}")
     public ResponseEntity<?> update(@PathVariable  UUID speakerId,
-                                    @RequestBody SpeakerCreateRequest speaker,
+                                    @RequestBody Speaker speaker,
                                     @RequestHeader(value = "Authorization", required = false) String token
-                                    ) {
+                                    ) throws NotFoundException {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
-            speakerCreateValidator.validate(speaker);
+            // speakerCreateValidator.validate(speaker);
             speakerService.findById(speakerId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -114,13 +120,14 @@ public class SpeakerController {
     @DeleteMapping("/{speakerId}")
     public ResponseEntity<?> delete(@PathVariable  UUID speakerId,
                                     @RequestHeader(value = "Authorization", required = false) String token
-                                    ) {
+                                    ) throws NotFoundException {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
             speakerService.findById(speakerId);
             speakerService.delete(speakerId);
