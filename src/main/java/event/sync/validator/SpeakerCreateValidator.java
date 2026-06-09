@@ -12,10 +12,10 @@ import java.util.List;
 public class SpeakerCreateValidator {
     public void validate(SpeakerCreateRequest speaker) {
         List<String> errors = new ArrayList<>();
-        if (speaker.getFullName() == null || speaker.getFullName().isEmpty()) {
-            errors.add("Full name is required");
+        if (speaker.getFirstName() == null || speaker.getFirstName().isEmpty()) {
+            errors.add("First name is required");
         }
-        if (speaker.getProfilePicture() == null || speaker.getProfilePicture().isEmpty()) {
+        if (speaker.getPictureUrl() == null || speaker.getPictureUrl().isEmpty()) {
             errors.add("Profile Picture Link is required");
         }
         if (speaker.getBiography() == null || speaker.getBiography().isEmpty()) {

@@ -26,13 +26,14 @@ public class JwtService {
         this.expirationSeconds = expirationSeconds;
     }
 
-    public String generateToken(UUID organizerId, String email) {
+    public String generateToken(UUID id, boolean isAdmin, String email) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + (long) expirationSeconds * 1000);
 
         return Jwts.builder()
-                .subject(organizerId.toString())
+                .subject(id.toString())
                 .claim("email", email)
+                .claim("isAdmin", isAdmin)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)

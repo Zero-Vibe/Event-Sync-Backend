@@ -14,11 +14,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SessionCreateRequest {
+    private UUID eventId;
     private String title;
     private String description;
-    private UUID roomId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private UUID roomId;
     private Integer capacity;
     private List<UUID> speakersId;
 }

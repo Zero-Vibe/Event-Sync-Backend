@@ -1,6 +1,6 @@
 package event.sync.repository;
 
-import event.sync.model.Room;
+import event.sync.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RoomRepository extends JpaRepository<Room, UUID> {
-    Optional<Object> findByName(String name);
+public interface UserRepository extends JpaRepository<User, UUID> {
+    Optional<User> findByName(String name);
+
+    Optional<User> findByEmail(String email);
 }
