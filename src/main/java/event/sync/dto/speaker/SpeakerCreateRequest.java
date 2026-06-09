@@ -10,8 +10,9 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class SpeakerCreateRequest {
-    private String fullName;
-    private String profilePicture;
+    private String firstName;
+    private String lastName;
+    private String pictureUrl;
     private String biography;
     private List<SpeakerLinkRequest> links;
 }

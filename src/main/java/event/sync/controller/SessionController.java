@@ -1,12 +1,14 @@
 package event.sync.controller;
 
 import event.sync.dto.session.SessionCreateRequest;
+import event.sync.exception.NotFoundException;
+import event.sync.service.AuthService;
 import event.sync.service.EventService;
 import event.sync.service.JwtService;
 import event.sync.service.SessionService;
 import event.sync.validator.SessionCreateValidator;
 import io.jsonwebtoken.Claims;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/events/{eventId}/sessions")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class SessionController {
 
@@ -24,10 +26,11 @@ public class SessionController {
     private final EventService eventService;
     private final SessionCreateValidator sessionCreateValidator;
     private final JwtService jwtService;
+    private final AuthService authService;
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
-                                              @PathVariable UUID sessionId) {
+                                              @PathVariable UUID sessionId) throws NotFoundException {
         try {
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
@@ -45,7 +48,7 @@ public class SessionController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId) {
+    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId) throws NotFoundException {
         try {
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.OK)
@@ -66,19 +69,20 @@ public class SessionController {
     public ResponseEntity<?> createSession(@PathVariable UUID eventId,
                                            @RequestBody SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
-                                           ) {
+                                           ) throws NotFoundException {
         try {
             if (token == null) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
-            sessionCreateValidator.validate(session);
+            // sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.create(eventId, session));
+                    .body(sessionService.create(session));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -95,15 +99,16 @@ public class SessionController {
                                            @PathVariable UUID  sessionId,
                                            @RequestBody SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
-                                            ) {
+                                            ) throws NotFoundException {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
-            sessionCreateValidator.validate(session);
+            // sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             sessionService.findById(sessionId);
             return ResponseEntity.status(HttpStatus.OK)
@@ -124,13 +129,14 @@ public class SessionController {
     public ResponseEntity<?> deleteSession(@PathVariable UUID eventId,
                                            @PathVariable UUID  sessionId,
                                            @RequestHeader(value = "Authorization", required = false) String token
-                                            ) {
+                                            ) throws NotFoundException {
         try {
             if (token == null) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
 
-            jwtService.decodeToken(token);
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
 
             eventService.findById(eventId);
             sessionService.findById(sessionId);

@@ -1,12 +1,13 @@
 package event.sync.controller;
 
 import event.sync.dto.question.QuestionCreateRequest;
+import event.sync.exception.BadRequestException;
+import event.sync.exception.NotFoundException;
 import event.sync.model.Session;
-import event.sync.service.EventService;
-import event.sync.service.QuestionService;
-import event.sync.service.SessionService;
+import event.sync.service.*;
 import event.sync.validator.QuestionCreateValidator;
-import lombok.AllArgsConstructor;
+import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 @Controller
 @RequestMapping("/events")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class QuestionController {
 
@@ -25,10 +26,12 @@ public class QuestionController {
     private final EventService eventService;
     private final QuestionCreateValidator questionCreateValidator;
     private final SessionService sessionService;
+    private final AuthService authService;
+    private final JwtService jwtService;
 
     @GetMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> getQuestions(@PathVariable UUID eventId,
-                                       @PathVariable UUID sessionId) {
+                                       @PathVariable UUID sessionId) throws NotFoundException {
         try {
             eventService.findById(eventId);
             sessionService.findById(sessionId);
@@ -49,19 +52,23 @@ public class QuestionController {
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
-                                          @RequestBody QuestionCreateRequest question) {
+                                          @RequestBody QuestionCreateRequest question,
+                                          @RequestHeader("Authorization") String token
+    ) throws NotFoundException, BadRequestException {
         try {
+            Claims claims = jwtService.decodeToken(token);
+            authService.checkIfAdmin(claims);
+
             questionCreateValidator.validate(question);
             eventService.findById(eventId);
             Session session = sessionService.findById(sessionId);
+
             if (session.isLive()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .header("Content-Type", "application/json")
-                        .body("You cannot vote anymore");
+                throw new BadRequestException("You cannot post question anymore");
             }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
-                    .body(questionService.create(sessionId, question));
+                    .body(questionService.save(session, question));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -77,14 +84,17 @@ public class QuestionController {
     public ResponseEntity<?> updateVote(@PathVariable UUID eventId,
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
-                                        @RequestParam boolean upvote) {
+                                        @RequestParam boolean upvote,
+                                        @RequestHeader("Authorization") String token
+    ) throws NotFoundException, BadRequestException {
         try {
+            jwtService.decodeToken(token);
+
             eventService.findById(eventId);
             Session session = sessionService.findById(sessionId);
+
             if (session.isLive()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .header("Content-Type", "application/json")
-                        .body("You cannot vote anymore");
+                throw new BadRequestException("You cannot vote anymore");
             }
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
