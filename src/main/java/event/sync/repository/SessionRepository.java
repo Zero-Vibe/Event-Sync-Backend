@@ -40,7 +40,7 @@ public class SessionRepository {
         try {
             PreparedStatement ps = connection.prepareStatement(
                 """
-                SELECT id, event_id, room_id, title, description, start_time, end_time, capacity, status, created_at, updated_at
+                SELECT id, event_id, room_id, title, description, start_time, end_time, capacity, created_at, updated_at
                 FROM sessions WHERE id = ?::UUID
                 """
             );
@@ -65,7 +65,7 @@ public class SessionRepository {
         try {
             PreparedStatement ps = connection.prepareStatement(
                     """
-                    SELECT id, event_id, room_id, title, description, start_time, end_time, capacity, status, created_at, updated_at
+                    SELECT id, event_id, room_id, title, description, start_time, end_time, capacity, created_at, updated_at
                     FROM sessions WHERE event_id = ?::UUID
                     """
             );
