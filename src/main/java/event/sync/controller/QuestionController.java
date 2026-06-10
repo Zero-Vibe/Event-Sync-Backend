@@ -80,11 +80,9 @@ public class QuestionController {
     public ResponseEntity<?> updateVote(@PathVariable UUID eventId,
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
-                                        @RequestParam boolean upvote,
-                                        @RequestHeader("Authorization") String token
+                                        @RequestParam boolean upvote
     ) throws NotFoundException, BadRequestException {
         try {
-            jwtService.decodeToken(token);
 
             eventService.findById(eventId);
             Session session = sessionService.findById(sessionId);
