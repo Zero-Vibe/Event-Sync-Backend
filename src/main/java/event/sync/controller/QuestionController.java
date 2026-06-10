@@ -31,7 +31,7 @@ public class QuestionController {
 
     @GetMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> getQuestions(@PathVariable UUID eventId,
-                                       @PathVariable UUID sessionId) throws NotFoundException {
+                                          @PathVariable UUID sessionId) throws NotFoundException {
         try {
             eventService.findById(eventId);
             sessionService.findById(sessionId);
@@ -52,19 +52,15 @@ public class QuestionController {
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
-                                          @RequestBody QuestionCreateRequest question,
-                                          @RequestHeader("Authorization") String token
+                                          @RequestBody QuestionCreateRequest question
     ) throws NotFoundException, BadRequestException {
         try {
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
             questionCreateValidator.validate(question);
             eventService.findById(eventId);
             Session session = sessionService.findById(sessionId);
 
-            if (session.isLive()) {
-                throw new BadRequestException("You cannot post question anymore");
+            if (!session.isLive()) {
+                throw new BadRequestException("Session is not live");
             }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
@@ -93,8 +89,8 @@ public class QuestionController {
             eventService.findById(eventId);
             Session session = sessionService.findById(sessionId);
 
-            if (session.isLive()) {
-                throw new BadRequestException("You cannot vote anymore");
+            if (!session.isLive()) {
+                throw new BadRequestException("Session is not live");
             }
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -108,4 +104,5 @@ public class QuestionController {
                     .header("Content-Type", "application/json")
                     .body(e.getMessage());
         }
-    }}
+    }
+}
