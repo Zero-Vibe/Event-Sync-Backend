@@ -8,6 +8,10 @@ spring:
     database: postgresql
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
 jwt:
   secret: ${JWT_SECRET}
   expiration: 3600
