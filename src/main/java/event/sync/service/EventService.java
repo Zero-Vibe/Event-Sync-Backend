@@ -7,8 +7,14 @@ import event.sync.model.Event;
 import event.sync.model.User;
 import event.sync.repository.EventRepository;
 import event.sync.repository.UserRepository;
+import event.sync.specification.FilterSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +27,15 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
-    public List<Event> findAll() {
-        return eventRepository.findAll();
+    public Page<Event> getAll(int page, int size, String sortField, String sortOrder, String filterJson) {
+        Sort sort = sortOrder.equalsIgnoreCase("DESC") ? Sort.by(sortField).descending() : Sort.by(sortField).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<Event> specification = FilterSpecification.parseSpecificationJson(filterJson);
+        return eventRepository.findAll(specification, pageable);
+    }
+
+    public List<Event> getMany(List<UUID> ids) {
+        return eventRepository.findAllById(ids);
     }
 
     public Event findById(UUID id) throws NotFoundException {
