@@ -3,6 +3,7 @@ package event.sync.exception;
 import event.sync.service.AuthService.InvalidCredentialsException;
 import event.sync.service.AuthService.EmailAlreadyExistsException;
 import io.jsonwebtoken.JwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -41,5 +43,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("code", 400, "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception ex) {
+        log.error(ex.getMessage(), ex);
     }
 }
