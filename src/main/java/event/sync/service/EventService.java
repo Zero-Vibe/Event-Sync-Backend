@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -85,5 +86,9 @@ public class EventService {
     public void delete(UUID id) throws NotFoundException {
         findById(id);
         eventRepository.deleteById(id);
+    }
+
+    public Optional<Event> findByTitle(String title) {
+        return eventRepository.findByTitle(title);
     }
 }

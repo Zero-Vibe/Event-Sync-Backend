@@ -2,6 +2,7 @@ package event.sync.controller;
 
 import event.sync.dto.event.EventCreateRequest;
 import event.sync.exception.BadRequestException;
+import event.sync.exception.ConflictException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.service.AuthService;
@@ -30,7 +31,7 @@ public class EventController {
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
                                               @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
-                                              @RequestParam(required = false, value = "_sort", defaultValue = "start_date_time") String sort,
+                                              @RequestParam(required = false, value = "_sort", defaultValue = "startDateTime") String sort,
                                               @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order,
                                               @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
                                               @RequestParam(required = false, value = "id") List<UUID> ids
@@ -60,12 +61,13 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Event> create(
+    public ResponseEntity<?> create(
             @RequestBody EventCreateRequest request,
             @RequestHeader("Authorization") String token
-    ) throws NotFoundException, BadRequestException {
+    ) throws NotFoundException, BadRequestException,  ConflictException {
         Claims claims = jwtService.decodeToken(token);
         authService.checkIfAdmin(claims);
+        checkIfEventTitleExists(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("Content-Type", "application/json")
                 .body(eventService.create(request,
@@ -78,9 +80,9 @@ public class EventController {
             @PathVariable UUID id,
             @RequestBody EventCreateRequest request,
             @RequestHeader("Authorization") String token
-    )  throws NotFoundException, BadRequestException {
-        Claims claims = jwtService.decodeToken(token);
-        authService.checkIfAdmin(claims);
+    )  throws NotFoundException, BadRequestException, ConflictException {
+        authService.checkIfAdmin(jwtService.decodeToken(token));
+        checkIfEventTitleExists(request);
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
                 .body(eventService.update(request,
@@ -97,5 +99,11 @@ public class EventController {
         authService.checkIfAdmin(claims);
         eventService.delete(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    private void checkIfEventTitleExists(EventCreateRequest request) throws ConflictException {
+        if (eventService.findByTitle(request.getTitle()).isPresent()) {
+            throw new ConflictException("Event title has already been used");
+        }
     }
 }

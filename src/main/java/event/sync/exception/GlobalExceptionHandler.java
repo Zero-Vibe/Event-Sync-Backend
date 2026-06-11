@@ -45,6 +45,12 @@ public class GlobalExceptionHandler {
                 .body(Map.of("code", 400, "message", e.getMessage()));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflictException(ConflictException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("code", 409, "message", e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public void handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
