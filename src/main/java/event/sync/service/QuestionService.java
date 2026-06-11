@@ -7,6 +7,7 @@ import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
+
     private final QuestionRepository questionRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public List<Question> getSessionQuestions(UUID sessionId) {
         return questionRepository.getQuestionsBySession_Id(sessionId);
@@ -24,7 +27,7 @@ public class QuestionService {
 
     @Transactional
     public Question save(Session session, QuestionCreateRequest request) {
-        return questionRepository.save(Question.builder()
+        Question saved = questionRepository.save(Question.builder()
                 .session(session)
                 .content(request.getContent())
                 .authorName((request.getAuthorName() != null && !request.getAuthorName().isBlank())
@@ -33,6 +36,12 @@ public class QuestionService {
                 .upvotes(0)
                 .createdAt(LocalDateTime.now())
                 .build());
+
+        messagingTemplate.convertAndSend(
+                "/topic/sessions/" + session.getId() + "/questions",
+                saved
+        );
+        return saved;
     }
 
     public Question findById(UUID id) throws NotFoundException {
@@ -42,10 +51,17 @@ public class QuestionService {
 
     @Transactional
     public int updateVote(UUID questionId, boolean upvote) throws NotFoundException {
-        Question initialQuestion = findById(questionId);
-        if (initialQuestion.getUpvotes() <= 0 && !upvote) {
+        Question question = findById(questionId);
+        if (question.getUpvotes() <= 0 && !upvote) {
             return 0;
         }
-        return questionRepository.updateVote(questionId, upvote);
+        int result = questionRepository.updateVote(questionId, upvote);
+
+        Question updated = findById(questionId);
+        messagingTemplate.convertAndSend(
+                "/topic/sessions/" + question.getSession().getId() + "/votes",
+                updated
+        );
+        return result;
     }
 }
