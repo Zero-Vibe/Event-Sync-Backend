@@ -2,8 +2,6 @@ package event.sync.service;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.NotFoundException;
-import event.sync.model.Event;
-import event.sync.model.Room;
 import event.sync.model.Session;
 import event.sync.repository.EventRepository;
 import event.sync.repository.RoomRepository;
@@ -11,11 +9,14 @@ import event.sync.repository.SessionRepository;
 import event.sync.repository.SpeakerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,8 +32,10 @@ public class SessionService {
                 .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
     }
 
-    public List<Session> getAll(UUID eventId) {
-        return sessionRepository.findAllByEvent_Id(eventId);
+    public Page<Session> getAll(int pageNumber, int pageSize, String sort, String order, UUID eventId) {
+        Sort sortCondition = order.equalsIgnoreCase("ASC") ? Sort.by(sort).ascending() : Sort.by(sort).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortCondition);
+        return sessionRepository.findAllByEvent_Id(eventId, pageable);
     }
 
     @Transactional
