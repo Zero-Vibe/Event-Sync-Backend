@@ -2,7 +2,6 @@ package event.sync.service;
 
 import event.sync.dto.question.QuestionCreateRequest;
 import event.sync.exception.NotFoundException;
-import event.sync.model.Event;
 import event.sync.model.Question;
 import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
@@ -15,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +26,7 @@ import java.util.UUID;
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public Page<Question> getAllQuestions(UUID sessionId, int page, int size, String sortField, String sortOrder, String filterJson) {
         Sort sort = sortOrder.equalsIgnoreCase("DESC") ? Sort.by(sortField).descending() : Sort.by(sortField).ascending();
@@ -33,7 +34,6 @@ public class QuestionService {
         Specification<Question> specification = FilterSpecification.parseSpecificationJson(filterJson);
         return questionRepository.findAll(specification, pageable);
     }
-
 
     public List<Question> getSessionQuestions(UUID sessionId) {
         return questionRepository.getQuestionsBySession_Id(sessionId);
@@ -45,7 +45,7 @@ public class QuestionService {
 
     @Transactional
     public Question save(Session session, QuestionCreateRequest question) throws NotFoundException {
-        return questionRepository.save(Question.builder()
+        Question saved = questionRepository.save(Question.builder()
                         .session(session)
                         .content(question.getContent())
                         .user((question.getAuthorName() == null || question.getAuthorName().isBlank())
@@ -55,6 +55,12 @@ public class QuestionService {
                         .upvotes(0)
                         .createdAt(LocalDateTime.now())
                         .build());
+
+        messagingTemplate.convertAndSend(
+                "/topic/sessions/" + session.getId() + "/questions",
+                saved
+        );
+        return saved;
     }
 
     public Question findById(UUID id) throws NotFoundException {
@@ -64,17 +70,26 @@ public class QuestionService {
 
     @Transactional
     public int updateVote(UUID questionId, boolean upvote) throws NotFoundException {
-        Question initialQuestion = findById(questionId);
-        if (initialQuestion.getUpvotes() <= 0 && !upvote) {
+        Question question = findById(questionId);
+        if (question.getUpvotes() <= 0 && !upvote) {
             return 0;
         }
-        return questionRepository.updateVote(questionId, upvote).getUpvotes();
+        int upvotes = questionRepository.updateVote(questionId, upvote).getUpvotes();
+
+        Question updated = findById(questionId);
+        messagingTemplate.convertAndSend(
+                "/topic/sessions/" + question.getSession().getId() + "/votes",
+                updated
+        );
+        return upvotes;
     }
 
+    @Transactional
     public void deleteById(UUID questionId) {
         questionRepository.deleteById(questionId);
     }
 
+    @Transactional
     public void deleteMany(List<UUID> questionIds) {
         questionRepository.deleteAllById(questionIds);
     }
