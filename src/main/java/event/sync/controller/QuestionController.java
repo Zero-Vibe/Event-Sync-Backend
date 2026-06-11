@@ -70,9 +70,12 @@ public class QuestionController {
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
-                                          @RequestBody QuestionCreateRequest question
+                                          @RequestBody QuestionCreateRequest question,
+                                          @RequestHeader(name = "Authorization")  String token
     ) throws NotFoundException, BadRequestException {
         try {
+            UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+
             questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
             Session session = sessionService.findById(sessionId);
@@ -82,7 +85,7 @@ public class QuestionController {
             }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
-                    .body(questionService.save(session, question));
+                    .body(questionService.save(session, userId, question));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")

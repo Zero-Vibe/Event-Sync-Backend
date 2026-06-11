@@ -44,12 +44,12 @@ public class QuestionService {
     }
 
     @Transactional
-    public Question save(Session session, QuestionCreateRequest question) throws NotFoundException {
+    public Question save(Session session, UUID userId, QuestionCreateRequest question) throws NotFoundException {
         Question saved = questionRepository.save(Question.builder()
                         .session(session)
                         .content(question.getContent())
                         .user((question.getAuthorName() == null || question.getAuthorName().isBlank())
-                                ? userRepository.findByName(question.getAuthorName())
+                                ? userRepository.findById(userId)
                                     .orElseThrow(() -> new NotFoundException("Specified user not found"))
                                 : null)
                         .upvotes(0)
