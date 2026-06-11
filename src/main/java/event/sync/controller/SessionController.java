@@ -55,7 +55,7 @@ public class SessionController {
     public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId,
                                             @RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
                                             @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
-                                            @RequestParam(required = false, value = "_sort", defaultValue = "start_time") String sort,
+                                            @RequestParam(required = false, value = "_sort", defaultValue = "startTime") String sort,
                                             @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order) throws NotFoundException {
         try {
             eventService.findById(eventId);
@@ -67,7 +67,8 @@ public class SessionController {
 
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(pagedResult);
+                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                    .body(pagedResult.getContent());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
