@@ -7,7 +7,7 @@ spring:
   jpa:
     database: postgresql
     hibernate:
-      ddl-auto: 
+      ddl-auto: validate
 jwt:
   secret: ${JWT_SECRET}
   expiration: 3600
