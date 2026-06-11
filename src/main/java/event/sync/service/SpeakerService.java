@@ -1,5 +1,7 @@
 package event.sync.service;
 
+import event.sync.dto.speaker.SpeakerCreateRequest;
+import event.sync.dto.speaker.SpeakerLinkRequest;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Speaker;
 import event.sync.model.SpeakerLink;
@@ -28,34 +30,46 @@ public class SpeakerService {
     }
 
     @Transactional
-    public Speaker create(Speaker speaker) {
-        Speaker newSpeaker = speakerRepository.save(speaker);
-        speaker.setLinks(createSpeakerLinks(newSpeaker));
+    public Speaker create(SpeakerCreateRequest createRequest) {
+        Speaker newSpeaker = speakerRepository
+                .save(SpeakerCreateRequest.toSpeaker(createRequest));
+        newSpeaker.setLinks((speakerLinkRepository.saveAll(newSpeaker.getLinks())));
         return newSpeaker;
     }
 
     @Transactional
-    public Speaker update(UUID id, Speaker newSpeaker) throws NotFoundException {
+    public Speaker update(UUID id, SpeakerCreateRequest speakerRequest) throws NotFoundException {
         Speaker speaker = findById(id);
-        return speakerRepository.save(Speaker.builder()
-                .id(speaker.getId())
-                .firstName((newSpeaker.getFirstName() == null || newSpeaker.getFirstName().isBlank()) ? speaker.getFirstName() : newSpeaker.getFirstName())
-                .lastName((newSpeaker.getLastName() == null || newSpeaker.getLastName().isBlank()) ? speaker.getLastName() : newSpeaker.getLastName())
-                .pictureUrl(speaker.getPictureUrl())
-                .biography((newSpeaker.getBiography() == null || newSpeaker.getBiography().isBlank()) ? speaker.getBiography() : newSpeaker.getBiography())
-                .links((newSpeaker.getLinks() == null) ? createSpeakerLinks(speaker) : createSpeakerLinks(newSpeaker))
-                .build());
+
+        speaker.setFirstName((speakerRequest.getFirstName() == null
+                || speakerRequest.getFirstName().isBlank())
+                ? speaker.getFirstName() : speakerRequest.getFirstName());
+        speaker.setLastName((speakerRequest.getLastName() == null
+                || speakerRequest.getLastName().isBlank())
+                ? speaker.getLastName() : speakerRequest.getLastName());
+        speaker.setPictureUrl((speakerRequest.getPictureUrl() == null)
+                ? speaker.getPictureUrl() : speakerRequest.getPictureUrl());
+        speaker.setBiography((speakerRequest.getBiography() == null
+                || speakerRequest.getBiography().isBlank())
+                ? speaker.getBiography() : speakerRequest.getBiography());
+
+        Speaker savedSpeaker = speakerRepository.save(speaker);
+
+        if (speakerRequest.getLinks() != null) {
+            speakerLinkRepository.deleteAllBySpeakerId(savedSpeaker.getId());
+            List<SpeakerLink> links = speakerRequest.getLinks().stream()
+                    .map(linkRequest -> SpeakerLinkRequest.toSpeakerLink(savedSpeaker, linkRequest))
+                    .toList();
+            savedSpeaker.setLinks(speakerLinkRepository.saveAll(links));
+        }
+
+        return savedSpeaker;
     }
 
     @Transactional
     public void delete(UUID id) throws NotFoundException {
         findById(id);
+        speakerLinkRepository.deleteAllBySpeakerId(id);
         speakerRepository.deleteById(id);
-    }
-
-    private List<SpeakerLink> createSpeakerLinks(Speaker speaker) {
-        speakerLinkRepository.deleteBySpeakerId(speaker.getId());
-        speaker.getLinks().forEach(speakerLink -> speakerLink.setSpeaker(speaker));
-        return speakerLinkRepository.saveAll(speaker.getLinks());
     }
 }

@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "speakers")
+@ToString
 public class Speaker {
 
     @Id
