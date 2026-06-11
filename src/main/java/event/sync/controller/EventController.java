@@ -30,7 +30,7 @@ public class EventController {
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
                                               @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
-                                              @RequestParam(required = false, value = "_sort", defaultValue = "start_date") String sort,
+                                              @RequestParam(required = false, value = "_sort", defaultValue = "start_date_time") String sort,
                                               @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order,
                                               @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
                                               @RequestParam(required = false, value = "id") List<UUID> ids
