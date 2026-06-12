@@ -1,5 +1,6 @@
 package event.sync.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties("hibernateLazyInitializer") // it showed up in user responses
 @Entity
 @Table(name = "users")
 public class User {

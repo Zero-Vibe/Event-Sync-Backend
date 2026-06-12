@@ -63,12 +63,18 @@ public class AuthService {
     }
 
     public void checkIfAdmin(Claims claims) {
-        if (!claims.get("isAdmin").equals(Boolean.TRUE)) throw new InvalidCredentialsException();
+        if (!claims.get("isAdmin").equals(Boolean.TRUE)) throw new PermissionDeniedException();
     }
 
     public static class InvalidCredentialsException extends RuntimeException {
         public InvalidCredentialsException() {
             super("Invalid email or password");
+        }
+    }
+
+    public static class PermissionDeniedException extends RuntimeException {
+        public PermissionDeniedException() {
+            super("Admin access denied");
         }
     }
 

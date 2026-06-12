@@ -1,6 +1,7 @@
 package event.sync.controller;
 
 import event.sync.dto.room.RoomRequest;
+import event.sync.dto.room.RoomResponse;
 import event.sync.exception.NotFoundException;
 import event.sync.repository.UserRepository;
 import event.sync.service.AuthService;
@@ -8,10 +9,13 @@ import event.sync.service.JwtService;
 import event.sync.service.RoomService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,11 +28,28 @@ public class RoomController {
     private final AuthService authService;
 
     @GetMapping("/rooms")
-    public ResponseEntity<?> getRooms() {
-        try {
+    public ResponseEntity<?> getRooms(@RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
+                                      @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
+                                      @RequestParam(required = false, value = "_sort", defaultValue = "name") String sort,
+                                      @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order,
+                                      @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
+                                      @RequestParam(required = false, value = "id") List<UUID> ids
+    ) {
+        if (ids != null && !ids.isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(roomService.findAll());
+                    .body(roomService.getMany(ids));
+        }
+        try {
+            int pageSize = end - start;
+            int pageNumber = start / pageSize;
+
+            Page<RoomResponse> pagedResult = roomService.findAll(pageNumber, pageSize, sort, order, filterJson);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                    .header("Content-Type", "application/json")
+                    .body(pagedResult.getContent());
         } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")

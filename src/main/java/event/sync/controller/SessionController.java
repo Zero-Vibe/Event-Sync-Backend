@@ -2,6 +2,8 @@ package event.sync.controller;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.NotFoundException;
+import event.sync.model.Event;
+import event.sync.model.Session;
 import event.sync.service.AuthService;
 import event.sync.service.EventService;
 import event.sync.service.JwtService;
@@ -9,11 +11,13 @@ import event.sync.service.SessionService;
 import event.sync.validator.SessionCreateValidator;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,7 +36,7 @@ public class SessionController {
     public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
                                               @PathVariable UUID sessionId) throws NotFoundException {
         try {
-            eventService.findById(eventId);
+            isEventRelated(eventId, sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.findById(sessionId));
@@ -48,12 +52,23 @@ public class SessionController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId) throws NotFoundException {
+    public ResponseEntity<?> getAllSessions(@PathVariable UUID eventId,
+                                            @RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
+                                            @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
+                                            @RequestParam(required = false, value = "_sort", defaultValue = "startTime") String sort,
+                                            @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order) throws NotFoundException {
         try {
             eventService.findById(eventId);
+
+            int pageSize = end - start;
+            int pageNumber = start / pageSize;
+
+            Page<Session> pagedResult = sessionService.getAll(pageNumber, pageSize, sort, order, eventId);
+
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(sessionService.getAll(eventId));
+                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                    .body(pagedResult.getContent());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -109,8 +124,7 @@ public class SessionController {
             authService.checkIfAdmin(claims);
 
             // sessionCreateValidator.validate(session);
-            eventService.findById(eventId);
-            sessionService.findById(sessionId);
+            isEventRelated(eventId, sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.update(sessionId, session));
@@ -138,8 +152,7 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            eventService.findById(eventId);
-            sessionService.findById(sessionId);
+            isEventRelated(eventId, sessionId);
             sessionService.delete(sessionId);
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .build();
@@ -153,4 +166,12 @@ public class SessionController {
                     .body(e.getStackTrace());
         }
     }
+
+    private void isEventRelated(UUID eventId, UUID sessionId) throws NotFoundException {
+        Event event = eventService.findById(eventId);
+        if (event.getSessions().stream()
+                .noneMatch(s -> s.getId().equals(sessionId))) {
+            throw new NotFoundException("Session not found in event: " + event.getTitle());
+        }
+    };
 }

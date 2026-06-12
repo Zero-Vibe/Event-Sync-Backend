@@ -29,8 +29,9 @@ public class Question {
     @Column(nullable = false)
     private String content;
 
-    @Column
-    private String authorName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;   // null = anonymous
 
     @Builder.Default
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package event.sync.controller;
 
+import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Speaker;
 import event.sync.service.AuthService;
@@ -62,9 +63,9 @@ public class SpeakerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody Speaker speaker,
+    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker,
                                   @RequestHeader(value = "Authorization", required = false) String token
-                                    ) {
+    ) {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -90,7 +91,7 @@ public class SpeakerController {
 
     @PutMapping("/{speakerId}")
     public ResponseEntity<?> update(@PathVariable  UUID speakerId,
-                                    @RequestBody Speaker speaker,
+                                    @RequestBody SpeakerCreateRequest speaker,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws NotFoundException {
         try {

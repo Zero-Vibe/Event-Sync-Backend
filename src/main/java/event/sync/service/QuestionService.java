@@ -5,8 +5,15 @@ import event.sync.exception.NotFoundException;
 import event.sync.model.Question;
 import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
+import event.sync.repository.UserRepository;
+import event.sync.specification.FilterSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,25 +24,37 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
-
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+
+    public Page<Question> getAllQuestions(UUID sessionId, int page, int size, String sortField, String sortOrder, String filterJson) {
+        Sort sort = sortOrder.equalsIgnoreCase("DESC") ? Sort.by(sortField).descending() : Sort.by(sortField).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<Question> specification = FilterSpecification.parseSpecificationJson(filterJson);
+        return questionRepository.findAll(specification, pageable);
+    }
 
     public List<Question> getSessionQuestions(UUID sessionId) {
         return questionRepository.getQuestionsBySession_Id(sessionId);
     }
 
+    public List<Question> getMany(List<UUID> ids) {
+        return questionRepository.findAllById(ids);
+    }
+
     @Transactional
-    public Question save(Session session, QuestionCreateRequest request) {
+    public Question save(Session session, UUID userId, QuestionCreateRequest question) throws NotFoundException {
         Question saved = questionRepository.save(Question.builder()
-                .session(session)
-                .content(request.getContent())
-                .authorName((request.getAuthorName() != null && !request.getAuthorName().isBlank())
-                        ? request.getAuthorName()
-                        : null)
-                .upvotes(0)
-                .createdAt(LocalDateTime.now())
-                .build());
+                        .session(session)
+                        .content(question.getContent())
+                        .user((question.getAuthorName() == null || question.getAuthorName().isBlank())
+                                ? userRepository.findById(userId)
+                                    .orElseThrow(() -> new NotFoundException("Specified user not found"))
+                                : null)
+                        .upvotes(0)
+                        .createdAt(LocalDateTime.now())
+                        .build());
 
         messagingTemplate.convertAndSend(
                 "/topic/sessions/" + session.getId() + "/questions",
@@ -55,13 +74,23 @@ public class QuestionService {
         if (question.getUpvotes() <= 0 && !upvote) {
             return 0;
         }
-        int result = questionRepository.updateVote(questionId, upvote);
+        int upvotes = questionRepository.updateVote(questionId, upvote).getUpvotes();
 
         Question updated = findById(questionId);
         messagingTemplate.convertAndSend(
                 "/topic/sessions/" + question.getSession().getId() + "/votes",
                 updated
         );
-        return result;
+        return upvotes;
+    }
+
+    @Transactional
+    public void deleteById(UUID questionId) {
+        questionRepository.deleteById(questionId);
+    }
+
+    @Transactional
+    public void deleteMany(List<UUID> questionIds) {
+        questionRepository.deleteAllById(questionIds);
     }
 }
