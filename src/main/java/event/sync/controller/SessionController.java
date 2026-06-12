@@ -17,13 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/events/{eventId}/sessions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(exposedHeaders = "X-Total-Count")
 public class SessionController {
 
     private final SessionService sessionService;
@@ -33,8 +32,8 @@ public class SessionController {
     private final AuthService authService;
 
     @GetMapping("/{sessionId}")
-    public ResponseEntity<?> getEventSessions(@PathVariable UUID eventId,
-                                              @PathVariable UUID sessionId) throws NotFoundException {
+    public ResponseEntity<?> findById(@PathVariable UUID eventId,
+                                      @PathVariable UUID sessionId) throws NotFoundException {
         try {
             isEventRelated(eventId, sessionId);
             return ResponseEntity.status(HttpStatus.OK)
@@ -152,8 +151,7 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            isEventRelated(eventId, sessionId);
-            sessionService.delete(sessionId);
+            sessionService.delete(eventId, sessionId);
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .build();
         } catch (ResponseStatusException e) {
