@@ -25,19 +25,14 @@ public class FilterSpecification {
                     if (key.endsWith("_id")) {
                         String relatedObject = key.substring(0, key.length() - 3);
                         predicates.add(criteriaBuilder.equal(root.get(relatedObject).get("id"), value));
-                    }
-                    else  if (key instanceof String) {
-                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(key)), "%" + value.toString().toLowerCase() + "%"));
-                    }
-                    else {
+                    } else {
                         predicates.add(criteriaBuilder.equal(root.get(key), value));
                     }
                 }
-                criteriaBuilder.and(predicates.toArray(new Predicate[0]));
             } catch (Exception e) {
                 return criteriaBuilder.conjunction();
             }
-            return null;
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         });
     }
 }
