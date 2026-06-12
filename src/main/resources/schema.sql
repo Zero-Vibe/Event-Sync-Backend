@@ -1,84 +1,82 @@
-CREATE TYPE link_type AS ENUM (
-    'TWITTER',
-    'LINKEDIN',
-    'GITHUB',
-    'YOUTUBE',
-    'WEBSITE',
-    'OTHER'
-);
+DROP TABLE IF EXISTS sessions_speakers CASCADE;
+DROP TABLE IF EXISTS speaker_links CASCADE;
+DROP TABLE IF EXISTS questions CASCADE;
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
+DROP TABLE IF EXISTS speakers CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
-CREATE TABLE organizers (
-                            id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                            email         VARCHAR(255) NOT NULL UNIQUE,
-                            password_hash TEXT         NOT NULL,
-                            name          VARCHAR(255),
-                            created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
-                            updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
+DROP TYPE IF EXISTS session_status CASCADE;
+DROP TYPE IF EXISTS link_platform CASCADE;
+
+CREATE TYPE session_status AS ENUM ('PUBLISHED', 'LIVE', 'ENDED');
+CREATE TYPE link_platform AS ENUM ('TWITTER', 'LINKEDIN', 'GITHUB', 'YOUTUBE', 'WEBSITE', 'OTHER');
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    join_date TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE events (
-                        id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                        title         VARCHAR(255) NOT NULL,
-                        description   TEXT,
-                        start_date    TIMESTAMP    NOT NULL,
-                        end_date      TIMESTAMP    NOT NULL,
-                        location      VARCHAR(255) NOT NULL,
-                        created_by    UUID         REFERENCES organizers(id) ON DELETE SET NULL,
-                        created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
-                        updated_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
-                        CONSTRAINT chk_event_dates CHECK (end_date > start_date)
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL UNIQUE,
+    description VARCHAR(1000),
+    start_date_time TIMESTAMP NOT NULL,
+    end_date_time TIMESTAMP NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE rooms (
-                       id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                       name       VARCHAR(255) NOT NULL,
-                       created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-                       updated_at TIMESTAMP    NOT NULL DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE speakers (
-                          id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                          full_name       VARCHAR(255) NOT NULL,
-                          profile_picture TEXT,
-                          biography       TEXT,
-                          created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
-                          updated_at      TIMESTAMP    NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE speaker_links (
-                               id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                               speaker_id  UUID        NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,
-                               type        link_type   NOT NULL DEFAULT 'other',
-                               url         TEXT        NOT NULL,
-                               label       VARCHAR(100),
-                               "order"     SMALLINT    NOT NULL DEFAULT 0
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255),
+    picture_url VARCHAR(255) NOT NULL,
+    biography VARCHAR(500)
 );
 
 CREATE TABLE sessions (
-                          id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                          event_id     UUID         NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-                          room_id      UUID         NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
-                          title        VARCHAR(255) NOT NULL,
-                          description  TEXT,
-                          start_time   TIMESTAMP    NOT NULL,
-                          end_time     TIMESTAMP    NOT NULL,
-                          capacity     INTEGER      CHECK (capacity > 0),
-                          created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
-                          updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
-                          CONSTRAINT chk_session_times CHECK (end_time > start_time)
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    CONSTRAINT end_after_start CHECK (end_time >= start_time),
+    capacity INTEGER,
+    status session_status NOT NULL DEFAULT 'PUBLISHED'
 );
 
-CREATE TABLE session_speakers (
-                                  session_id  UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-                                  speaker_id  UUID NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,
-                                  PRIMARY KEY (session_id, speaker_id)
+CREATE TABLE sessions_speakers (
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    speakers_id UUID NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,
+    PRIMARY KEY (session_id, speakers_id)
+);
+
+CREATE TABLE speaker_links (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    speaker_id UUID NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,
+    platform link_platform NOT NULL DEFAULT 'OTHER',
+    url VARCHAR(255) NOT NULL,
+    label VARCHAR(255)
 );
 
 CREATE TABLE questions (
-                           id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-                           session_id  UUID         NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-                           content     TEXT         NOT NULL CHECK (char_length(content) > 0),
-                           author_name VARCHAR(255),
-                           upvotes     INTEGER      NOT NULL DEFAULT 0 CHECK (upvotes >= 0),
-                           created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    content VARCHAR(255) NOT NULL,
+    upvotes INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
