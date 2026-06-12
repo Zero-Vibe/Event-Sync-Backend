@@ -20,8 +20,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/events")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@CrossOrigin(exposedHeaders = "X-Total-Count")
 public class EventController {
 
     private final EventService eventService;

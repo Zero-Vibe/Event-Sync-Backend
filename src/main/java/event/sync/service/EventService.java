@@ -48,15 +48,15 @@ public class EventService {
     public Event create(EventCreateRequest request, UUID userId) throws NotFoundException, BadRequestException {
         User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        if (!request.getEndDate().isAfter(request.getStartDate())) {
+        if (!request.getEndDateTime().isAfter(request.getStartDateTime())) {
             throw new BadRequestException("End date must be after start date");
         }
 
         return eventRepository.save(Event.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .startDateTime(request.getStartDate())
-                .endDateTime(request.getEndDate())
+                .startDateTime(request.getStartDateTime())
+                .endDateTime(request.getEndDateTime())
                 .location(request.getLocation())
                 .createdBy(creator)
                 .build());
@@ -66,7 +66,7 @@ public class EventService {
     public Event update(EventCreateRequest request, UUID id) throws NotFoundException, BadRequestException {
         Event toUpdate = findById(id);
 
-        if (!request.getEndDate().isAfter(request.getStartDate())) {
+        if (!request.getEndDateTime().isAfter(request.getStartDateTime())) {
             throw new BadRequestException("End date must be after start date");
         }
 
@@ -74,8 +74,8 @@ public class EventService {
                 .id(id)
                 .title((request.getTitle() != null && !request.getTitle().isBlank()) ? request.getTitle() : toUpdate.getTitle())
                 .description((request.getDescription() != null && !request.getDescription().isBlank()) ? request.getDescription() : toUpdate.getDescription())
-                .startDateTime((request.getStartDate() != null) ? request.getStartDate() : toUpdate.getStartDateTime())
-                .endDateTime((request.getEndDate() != null) ? request.getEndDate() : toUpdate.getEndDateTime())
+                .startDateTime((request.getStartDateTime() != null) ? request.getStartDateTime() : toUpdate.getStartDateTime())
+                .endDateTime((request.getEndDateTime() != null) ? request.getEndDateTime() : toUpdate.getEndDateTime())
                 .location((request.getLocation() != null && !request.getLocation().isBlank()) ? request.getLocation() : toUpdate.getLocation())
                 .createdBy(toUpdate.getCreatedBy())
                 .sessions(toUpdate.getSessions())
