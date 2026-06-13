@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +49,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordHash)
                 .name(request.getName())
-                .joinDate(LocalDateTime.now())
+                .joinDate(Instant.now())
                 .build()
         );
 
