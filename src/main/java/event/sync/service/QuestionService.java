@@ -47,15 +47,15 @@ public class QuestionService {
     @Transactional
     public Question save(Session session, UUID userId, QuestionCreateRequest question) throws NotFoundException {
         Question saved = questionRepository.save(Question.builder()
-                        .session(session)
-                        .content(question.getContent())
-                        .user((question.getAuthorName() == null || question.getAuthorName().isBlank())
-                                ? userRepository.findById(userId)
-                                    .orElseThrow(() -> new NotFoundException("Specified user not found"))
-                                : null)
-                        .upvotes(0)
-                        .createdAt(LocalDateTime.now())
-                        .build());
+                .session(session)
+                .content(question.getContent())
+                .user(userId != null
+                        ? userRepository.findById(userId)
+                          .orElseThrow(() -> new NotFoundException("Specified user not found"))
+                        : null)
+                .upvotes(0)
+                .createdAt(LocalDateTime.now())
+                .build());
 
         messagingTemplate.convertAndSend(
                 "/topic/sessions/" + session.getId() + "/questions",
