@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
@@ -15,7 +16,7 @@ public class EventCreateRequest {
 
     private String title;
     private String description;
-    private LocalDateTime startDateTime;
-    private LocalDateTime endDateTime;
+    private Instant startDateTime;
+    private Instant endDateTime;
     private String location;
 }
