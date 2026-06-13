@@ -2,6 +2,7 @@ package event.sync.service;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.NotFoundException;
+import event.sync.model.Event;
 import event.sync.model.Session;
 import event.sync.repository.EventRepository;
 import event.sync.repository.RoomRepository;
@@ -86,8 +87,13 @@ public class SessionService {
     }
 
     @Transactional
-    public void delete(UUID sessionId) throws NotFoundException {
-        findById(sessionId);
+    public void delete(UUID eventId, UUID sessionId) throws NotFoundException {
+        Session session = findById(sessionId);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+        if (!event.getSessions().remove(session)) {
+            throw new NotFoundException("Session not found in event: " + event.getTitle());
+        }
         sessionRepository.deleteById(sessionId);
     }
 }

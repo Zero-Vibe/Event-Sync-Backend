@@ -31,8 +31,9 @@ public class QuestionService {
     public Page<Question> getAllQuestions(UUID sessionId, int page, int size, String sortField, String sortOrder, String filterJson) {
         Sort sort = sortOrder.equalsIgnoreCase("DESC") ? Sort.by(sortField).descending() : Sort.by(sortField).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        Specification<Question> specification = FilterSpecification.parseSpecificationJson(filterJson);
-        return questionRepository.findAll(specification, pageable);
+        Specification<Question> spec = FilterSpecification.parseSpecificationJson(filterJson);
+        spec = spec.and((root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("session").get("id"), sessionId));
+        return questionRepository.findAll(spec, pageable);
     }
 
     public List<Question> getSessionQuestions(UUID sessionId) {

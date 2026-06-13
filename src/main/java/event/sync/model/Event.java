@@ -1,5 +1,6 @@
 package event.sync.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,5 +43,6 @@ public class Event {
 
     @Builder.Default
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Session> sessions = new ArrayList<>();
 }

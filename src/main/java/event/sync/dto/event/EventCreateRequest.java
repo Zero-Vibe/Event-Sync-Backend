@@ -15,7 +15,7 @@ public class EventCreateRequest {
 
     private String title;
     private String description;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDateTime startDateTime;
+    private LocalDateTime endDateTime;
     private String location;
 }

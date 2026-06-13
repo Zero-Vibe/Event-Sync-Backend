@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@CrossOrigin(exposedHeaders = "X-Total-Count")
 public class RoomController {
     private final RoomService roomService;
     private final JwtService jwtService;

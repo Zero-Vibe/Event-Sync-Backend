@@ -10,19 +10,19 @@ import event.sync.repository.QuestionRepository;
 import event.sync.service.*;
 import event.sync.validator.QuestionCreateValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 
-@Controller
+@RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(exposedHeaders = "X-Total-Count")
 public class QuestionController {
 
     private final QuestionService questionService;
@@ -53,9 +53,15 @@ public class QuestionController {
                         .body(questionService.getMany(ids));
             }
 
+            int pageSize = end - start;
+            int pageNumber = start / pageSize;
+
+            Page<Question> pagedResultPage = questionService.getAllQuestions(sessionId, pageNumber, pageSize, sort, order, filterJson);
+
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(questionService.getSessionQuestions(sessionId));
+                    .header("X-Total-Count", String.valueOf(pagedResultPage.getTotalElements()))
+                    .body(pagedResultPage.getContent());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .header("Content-Type", "application/json")
@@ -126,6 +132,7 @@ public class QuestionController {
         }
     }
 
+    @DeleteMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}")
     public ResponseEntity<?> delete(@PathVariable UUID eventId,
                                     @PathVariable UUID sessionId,
                                     @PathVariable UUID questionId,
