@@ -41,8 +41,14 @@ public class JwtService {
     }
 
     public Claims decodeToken(String token) {
-        return Jwts.parser().setSigningKey(key)
-                .build().parseClaimsJws(token).getBody();
+        String compact = token.trim();
+        if (compact.toLowerCase().startsWith("bearer ")) {
+            compact = compact.substring(7).trim();
+        }
+        return Jwts.parser()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(compact)
+                .getBody();
     }
-
 }
