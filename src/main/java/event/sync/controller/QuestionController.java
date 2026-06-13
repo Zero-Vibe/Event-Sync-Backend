@@ -77,10 +77,13 @@ public class QuestionController {
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
                                           @RequestBody QuestionCreateRequest question,
-                                          @RequestHeader(name = "Authorization")  String token
+                                          @RequestHeader(name = "Authorization", required = false) String token
     ) throws NotFoundException, BadRequestException {
         try {
-            UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+            UUID userId = null;
+            if (token != null) {
+                userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+            }
 
             questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
@@ -108,10 +111,12 @@ public class QuestionController {
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
                                         @RequestParam boolean upvote,
-                                        @RequestHeader("Authorization") String token
+                                        @RequestHeader(name = "Authorization", required = false) String token
     ) throws NotFoundException, BadRequestException {
         try {
-            jwtService.decodeToken(token);
+            if (token != null) {
+                jwtService.decodeToken(token);
+            }
 
             isEventRelated(eventId, sessionId);
             Session session = sessionService.findById(sessionId);
