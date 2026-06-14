@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -36,6 +36,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT NOW()")
-    private LocalDateTime joinDate;
+    @Column(columnDefinition = "TIMESTAMPTZ DEFAULT NOW()")
+    private Instant joinDate;
 }

@@ -19,15 +19,15 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL UNIQUE,
-    join_date TIMESTAMP DEFAULT NOW()
+    join_date TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL UNIQUE,
     description VARCHAR(1000),
-    start_date_time TIMESTAMP NOT NULL,
-    end_date_time TIMESTAMP NOT NULL,
+    start_date_time TIMESTAMPTZ NOT NULL,
+    end_date_time TIMESTAMPTZ NOT NULL,
     location VARCHAR(255) NOT NULL,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL
 );
@@ -51,8 +51,8 @@ CREATE TABLE sessions (
     room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
     CONSTRAINT end_after_start CHECK (end_time >= start_time),
     capacity INTEGER,
     status session_status NOT NULL DEFAULT 'PUBLISHED'
@@ -78,5 +78,5 @@ CREATE TABLE questions (
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     content VARCHAR(255) NOT NULL,
     upvotes INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

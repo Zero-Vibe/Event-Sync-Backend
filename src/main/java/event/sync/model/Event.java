@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,10 +29,10 @@ public class Event {
     private String description;
 
     @Column(nullable = false)
-    private LocalDateTime startDateTime;
+    private Instant startDateTime;
 
-    @Column(nullable = false, columnDefinition = "TIMESTAMP")
-    private LocalDateTime endDateTime;
+    @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+    private Instant endDateTime;
 
     @Column(nullable = false)
     private String location;

@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +54,7 @@ public class QuestionService {
                           .orElseThrow(() -> new NotFoundException("Specified user not found"))
                         : null)
                 .upvotes(0)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build());
 
         messagingTemplate.convertAndSend(

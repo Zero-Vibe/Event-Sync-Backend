@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +54,7 @@ public class UserService {
                     .email(request.getEmail())
                     .passwordHash(passwordHash)
                     .name(request.getName())
-                    .joinDate(LocalDateTime.now())
+                    .joinDate(Instant.now())
                     .build());
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("A user with that email or name already exists");

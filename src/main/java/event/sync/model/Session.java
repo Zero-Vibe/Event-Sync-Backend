@@ -7,7 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,10 +44,10 @@ public class Session {
     private String description;
 
     @Column(nullable = false)
-    private LocalDateTime startTime;
+    private Instant startTime;
 
-    @Column(nullable = false, columnDefinition = "TIMESTAMP CHECK (end_time::TIMESTAMP >= start_time::TIMESTAMP)")
-    private LocalDateTime endTime;
+    @Column(nullable = false, columnDefinition = "TIMESTAMPTZ CHECK (end_time >= start_time)")
+    private Instant endTime;
 
     @Column
     private Integer capacity;
@@ -65,8 +65,6 @@ public class Session {
 
     @JsonIgnore
     public boolean isLive() {
-        status = (LocalDateTime.now().isAfter(endTime)) ? SessionStatus.ENDED :
-                LocalDateTime.now().isBefore(startTime) ? SessionStatus.PUBLISHED : SessionStatus.LIVE;
-        return SessionStatus.LIVE.equals(this.status);
+        return Instant.now().isAfter(startTime) && Instant.now().isBefore(endTime);
     }
 }
