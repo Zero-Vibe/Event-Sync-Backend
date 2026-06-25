@@ -9,6 +9,7 @@ import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
 import event.sync.service.*;
 import event.sync.validator.QuestionCreateValidator;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -77,13 +78,15 @@ public class QuestionController {
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
                                           @RequestBody QuestionCreateRequest question,
-                                          @RequestHeader(name = "Authorization", required = false) String token
+                                          @RequestHeader(name = "Authorization", required = true) String token
     ) throws NotFoundException, BadRequestException {
         try {
-            UUID userId = null;
-            if (token != null) {
-                userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+            if (token == null || token.isBlank()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
+
+            Claims claims = jwtService.decodeToken(token);
+            UUID userId = question.getIsAnonymous() == true ? null : UUID.fromString(claims.getSubject());
 
             questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
@@ -111,12 +114,13 @@ public class QuestionController {
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
                                         @RequestParam boolean upvote,
-                                        @RequestHeader(name = "Authorization", required = false) String token
+                                        @RequestHeader(name = "Authorization", required = true) String token
     ) throws NotFoundException, BadRequestException {
         try {
-            if (token != null) {
-                jwtService.decodeToken(token);
+            if (token == null || token.isBlank()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
+            jwtService.decodeToken(token);
 
             isEventRelated(eventId, sessionId);
             Session session = sessionService.findById(sessionId);

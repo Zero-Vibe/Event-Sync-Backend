@@ -17,9 +17,9 @@ import java.util.UUID;
 public interface QuestionRepository extends JpaRepository<Question, UUID>, JpaSpecificationExecutor<Question> {
     List<Question> getQuestionsBySession_Id(UUID sessionId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Question SET upvotes = upvotes + CASE WHEN :upvote = true THEN 1 ELSE -1 END WHERE id = :questionId")
-    Question updateVote(@Param("questionId") UUID questionId, @Param("upvote") boolean upvote);
+    int updateVote(@Param("questionId") UUID questionId, @Param("upvote") boolean upvote);
 
     Page<Question> findAllBySessionId(UUID sessionId, Pageable pageable);
 }
