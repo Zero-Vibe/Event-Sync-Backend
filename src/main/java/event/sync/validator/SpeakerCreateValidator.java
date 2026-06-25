@@ -15,7 +15,7 @@ public class SpeakerCreateValidator {
         if (speaker.getFirstName() == null || speaker.getFirstName().isEmpty()) {
             errors.add("First name is required");
         }
-        if (speaker.getPictureUrl() == null || speaker.getPictureUrl().isEmpty()) {
+        if (speaker.getBase64Picture() == null || speaker.getBase64Picture().isEmpty()) {
             errors.add("Profile Picture Link is required");
         }
         if (speaker.getBiography() == null || speaker.getBiography().isEmpty()) {

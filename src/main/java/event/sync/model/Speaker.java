@@ -1,5 +1,6 @@
 package event.sync.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,8 +28,12 @@ public class Speaker {
     @Column
     private String lastName;
 
-    @Column(nullable = false)
-    private String pictureUrl;
+    @Column(nullable = false, name = "picture_url")
+    @JsonIgnore
+    private String pictureFileName;
+
+    @Transient
+    private String base64Picture;
 
     @Column(length = 500)
     private String biography;
