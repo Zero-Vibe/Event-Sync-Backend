@@ -81,7 +81,7 @@ public class QuestionController {
     ) throws NotFoundException, BadRequestException {
         try {
             UUID userId = null;
-            if (token != null) {
+            if (token != null && question.getAuthorName() != null && !question.getAuthorName().isBlank()) {
                 userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
             }
 
