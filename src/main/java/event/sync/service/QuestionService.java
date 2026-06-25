@@ -75,14 +75,14 @@ public class QuestionService {
         if (question.getUpvotes() <= 0 && !upvote) {
             return 0;
         }
-        int upvotes = questionRepository.updateVote(questionId, upvote).getUpvotes();
+        questionRepository.updateVote(questionId, upvote);
 
         Question updated = findById(questionId);
         messagingTemplate.convertAndSend(
                 "/topic/sessions/" + question.getSession().getId() + "/votes",
                 updated
         );
-        return upvotes;
+        return updated.getUpvotes();
     }
 
     @Transactional
