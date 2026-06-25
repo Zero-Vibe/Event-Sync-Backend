@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,34 +26,62 @@ import java.util.UUID;
 public class SpeakerService {
     private final SpeakerRepository speakerRepository;
     private final SpeakerLinkRepository speakerLinkRepository;
+    private final ImageService imageService;
 
     public Speaker findById(UUID id) throws NotFoundException {
-        return speakerRepository.findById(id)
+        Speaker speaker = speakerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Speaker not found"));
+        setSpeakerPicture(speaker);
+        return speaker;
     }
 
     public Page<Speaker> findAll(int page, int size, String sortField, String sortOrder, String filterJson) {
         Sort sort = sortOrder.equalsIgnoreCase("DESC") ? Sort.by(sortField).descending() : Sort.by(sortField).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Specification<Speaker> specification = FilterSpecification.parseSpecificationJson(filterJson);
-        return speakerRepository.findAll(specification, pageable);
+        Page<Speaker> pagedResult = speakerRepository.findAll(specification, pageable);
+        pagedResult.getContent().forEach(this::setSpeakerPicture);
+        return pagedResult;
     }
 
     public List<Speaker> getMany(List<UUID> ids) {
-        return speakerRepository.findAllById(ids);
+        List<Speaker> speakers = speakerRepository.findAllById(ids);
+        speakers.forEach(this::setSpeakerPicture);
+        return speakers;
     }
 
     @Transactional
     public Speaker create(SpeakerCreateRequest createRequest) {
-        Speaker newSpeaker = speakerRepository
-                .save(SpeakerCreateRequest.toSpeaker(createRequest));
-        newSpeaker.setLinks((speakerLinkRepository.saveAll(newSpeaker.getLinks())));
-        return newSpeaker;
+        File image = null;
+        if (createRequest.getBase64Picture() != null && createRequest.getBase64Picture().contains("base64")) {
+            image = imageService.saveImage(createRequest.getBase64Picture());
+            createRequest.setBase64Picture(image.getName());
+        }
+
+        try {
+            Speaker newSpeaker = speakerRepository
+                    .save(SpeakerCreateRequest.toSpeaker(createRequest));
+            newSpeaker.setLinks((speakerLinkRepository.saveAll(newSpeaker.getLinks())));
+
+            if (image != null) {
+                newSpeaker.setBase64Picture(imageService.getBase64Image(image.getName()));
+            }
+
+            return newSpeaker;
+        } catch (Exception e) {
+            if (image != null) imageService.deleteImage(image.getName());
+            throw new RuntimeException(e);
+        }
     }
 
     @Transactional
     public Speaker update(UUID id, SpeakerCreateRequest speakerRequest) throws NotFoundException {
         Speaker speaker = findById(id);
+
+        File image = null;
+        if (speakerRequest.getBase64Picture() != null && speakerRequest.getBase64Picture().contains("base64")) {
+            image = imageService.saveImage(speakerRequest.getBase64Picture());
+        }
 
         speaker.setFirstName((speakerRequest.getFirstName() == null
                 || speakerRequest.getFirstName().isBlank())
@@ -60,29 +89,39 @@ public class SpeakerService {
         speaker.setLastName((speakerRequest.getLastName() == null
                 || speakerRequest.getLastName().isBlank())
                 ? speaker.getLastName() : speakerRequest.getLastName());
-        speaker.setPictureUrl((speakerRequest.getPictureUrl() == null)
-                ? speaker.getPictureUrl() : speakerRequest.getPictureUrl());
+        speaker.setPictureFileName((image == null)
+                ? speaker.getPictureFileName() : image.getName());
         speaker.setBiography((speakerRequest.getBiography() == null
                 || speakerRequest.getBiography().isBlank())
                 ? speaker.getBiography() : speakerRequest.getBiography());
 
-        Speaker savedSpeaker = speakerRepository.save(speaker);
+        try {
+            Speaker savedSpeaker = speakerRepository.save(speaker);
 
-        if (speakerRequest.getLinks() != null) {
-            speakerLinkRepository.deleteAllBySpeakerId(savedSpeaker.getId());
-            List<SpeakerLink> links = speakerRequest.getLinks().stream()
-                    .map(linkRequest -> SpeakerLinkRequest.toSpeakerLink(savedSpeaker, linkRequest))
-                    .toList();
-            savedSpeaker.setLinks(speakerLinkRepository.saveAll(links));
+            if (speakerRequest.getLinks() != null) {
+                speakerLinkRepository.deleteAllBySpeakerId(savedSpeaker.getId());
+                List<SpeakerLink> links = speakerRequest.getLinks().stream()
+                        .map(linkRequest -> SpeakerLinkRequest.toSpeakerLink(savedSpeaker, linkRequest))
+                        .toList();
+                savedSpeaker.setLinks(speakerLinkRepository.saveAll(links));
+            }
+            setSpeakerPicture(savedSpeaker);
+
+            return savedSpeaker;
+        } catch (Exception e) {
+            if (image != null) imageService.deleteImage(image.getName());
+            throw new RuntimeException(e);
         }
-
-        return savedSpeaker;
     }
 
     @Transactional
     public void delete(UUID id) throws NotFoundException {
-        findById(id);
+        imageService.deleteImage(findById(id).getPictureFileName());
         speakerLinkRepository.deleteAllBySpeakerId(id);
         speakerRepository.deleteById(id);
+    }
+
+    private void setSpeakerPicture(Speaker speaker) {
+        speaker.setBase64Picture(imageService.getBase64Image(speaker.getPictureFileName()));
     }
 }

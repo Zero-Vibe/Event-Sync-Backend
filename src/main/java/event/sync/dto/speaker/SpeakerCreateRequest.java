@@ -15,7 +15,7 @@ import java.util.List;
 public class SpeakerCreateRequest {
     private String firstName;
     private String lastName;
-    private String pictureUrl;
+    private String base64Picture;
     private String biography;
     private List<SpeakerLinkRequest> links;
 
@@ -23,7 +23,10 @@ public class SpeakerCreateRequest {
         Speaker speaker = Speaker.builder()
                 .firstName(speakerCreateRequest.getFirstName())
                 .lastName(speakerCreateRequest.getLastName())
-                .pictureUrl(speakerCreateRequest.getPictureUrl())
+                .pictureFileName((speakerCreateRequest.getLastName() != null) ?
+                        (speakerCreateRequest.getBase64Picture()).contains("base64") ?
+                        "" : speakerCreateRequest.getBase64Picture()
+                        : "")
                 .biography(speakerCreateRequest.getBiography())
                 .build();
         List<SpeakerLink> speakerLinks = new ArrayList<>();
