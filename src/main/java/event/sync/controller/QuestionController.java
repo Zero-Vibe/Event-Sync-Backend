@@ -9,6 +9,7 @@ import event.sync.model.Session;
 import event.sync.repository.QuestionRepository;
 import event.sync.service.*;
 import event.sync.validator.QuestionCreateValidator;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -84,7 +85,8 @@ public class QuestionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+            Claims claims = jwtService.decodeToken(token);
+            UUID userId = question.getIsAnonymous() == true ? null : UUID.fromString(claims.getSubject());
 
             questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
