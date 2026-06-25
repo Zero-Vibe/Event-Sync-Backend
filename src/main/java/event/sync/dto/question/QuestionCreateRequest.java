@@ -11,5 +11,4 @@ import lombok.Setter;
 @NoArgsConstructor
 public class QuestionCreateRequest {
     private String content;
-    private String authorName;
 }

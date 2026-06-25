@@ -84,10 +84,7 @@ public class QuestionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            UUID userId = null;
-            if (question.getAuthorName() != null && !question.getAuthorName().isBlank()) {
-                userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
-            }
+            UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
 
             questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
