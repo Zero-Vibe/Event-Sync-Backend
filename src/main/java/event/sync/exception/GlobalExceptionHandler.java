@@ -3,7 +3,6 @@ package event.sync.exception;
 import event.sync.service.AuthService.InvalidCredentialsException;
 import event.sync.service.AuthService.EmailAlreadyExistsException;
 import io.jsonwebtoken.JwtException;
-import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

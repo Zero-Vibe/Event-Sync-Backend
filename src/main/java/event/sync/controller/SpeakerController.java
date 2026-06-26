@@ -6,7 +6,6 @@ import event.sync.model.Speaker;
 import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import event.sync.service.SpeakerService;
-import event.sync.validator.SpeakerCreateValidator;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

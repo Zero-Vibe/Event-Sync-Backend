@@ -8,7 +8,6 @@ import event.sync.service.AuthService;
 import event.sync.service.EventService;
 import event.sync.service.JwtService;
 import event.sync.service.SessionService;
-import event.sync.validator.SessionCreateValidator;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ public class SessionController {
 
     private final SessionService sessionService;
     private final EventService eventService;
-    private final SessionCreateValidator sessionCreateValidator;
     private final JwtService jwtService;
     private final AuthService authService;
 
