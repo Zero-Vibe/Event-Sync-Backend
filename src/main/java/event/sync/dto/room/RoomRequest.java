@@ -1,5 +1,6 @@
 package event.sync.dto.room;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -8,5 +9,5 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class RoomRequest {
-    private String name;
+    @NotBlank(message = "Room name is mandatory") private String name;
 }

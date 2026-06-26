@@ -3,6 +3,7 @@ package event.sync.controller;
 import event.sync.dto.auth.*;
 import event.sync.service.AuthService;
 import event.sync.service.JwtService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +19,13 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<LoginResponse> register(@RequestBody @Valid RegisterRequest request) {
         LoginResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }

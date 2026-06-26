@@ -10,6 +10,7 @@ import event.sync.repository.QuestionRepository;
 import event.sync.service.*;
 import event.sync.validator.QuestionCreateValidator;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -77,7 +78,7 @@ public class QuestionController {
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
-                                          @RequestBody QuestionCreateRequest question,
+                                          @RequestBody @Valid QuestionCreateRequest question,
                                           @RequestHeader(name = "Authorization", required = true) String token
     ) throws NotFoundException, BadRequestException {
         try {
@@ -88,7 +89,6 @@ public class QuestionController {
             Claims claims = jwtService.decodeToken(token);
             UUID userId = question.getIsAnonymous() == true ? null : UUID.fromString(claims.getSubject());
 
-            questionCreateValidator.validate(question);
             isEventRelated(eventId, sessionId);
             Session session = sessionService.findById(sessionId);
 
