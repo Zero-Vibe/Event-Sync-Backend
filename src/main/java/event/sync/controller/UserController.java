@@ -8,6 +8,7 @@ import event.sync.model.User;
 import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import event.sync.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -77,7 +78,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody RegisterRequest request,
+    public ResponseEntity<?> create(@RequestBody @Valid RegisterRequest request,
                                     @RequestHeader("Authorization") String token) {
         try {
             authService.checkIfAdmin(jwtService.decodeToken(token));
