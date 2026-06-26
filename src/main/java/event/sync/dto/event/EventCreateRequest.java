@@ -1,5 +1,7 @@
 package event.sync.dto.event;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +14,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventCreateRequest {
-
-    private String title;
+    @NotBlank(message = "title must be set and unique") private String title;
     private String description;
-    private Instant startDateTime;
-    private Instant endDateTime;
-    private String location;
+    @NotNull(message = "startDateTime must be set") private Instant startDateTime;
+    @NotNull(message = "endDateTime must be set") private Instant endDateTime;
+    @NotBlank(message = "Location must be set") private String location;
 }

@@ -9,6 +9,7 @@ import event.sync.service.AuthService;
 import event.sync.service.EventService;
 import event.sync.service.JwtService;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -62,7 +63,7 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<?> create(
-            @RequestBody EventCreateRequest request,
+            @RequestBody @Valid EventCreateRequest request,
             @RequestHeader("Authorization") String token
     ) throws NotFoundException, BadRequestException,  ConflictException {
         Claims claims = jwtService.decodeToken(token);
@@ -78,7 +79,7 @@ public class EventController {
     @PutMapping("/{id}")
     public ResponseEntity<Event> update(
             @PathVariable UUID id,
-            @RequestBody EventCreateRequest request,
+            @RequestBody @Valid EventCreateRequest request,
             @RequestHeader("Authorization") String token
     )  throws NotFoundException, BadRequestException, ConflictException {
         authService.checkIfAdmin(jwtService.decodeToken(token));
