@@ -1,6 +1,5 @@
 package event.sync.controller;
 
-import event.sync.dto.room.RoomResponse;
 import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Speaker;
@@ -9,6 +8,7 @@ import event.sync.service.JwtService;
 import event.sync.service.SpeakerService;
 import event.sync.validator.SpeakerCreateValidator;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,6 @@ import java.util.UUID;
 public class SpeakerController {
 
     private final SpeakerService speakerService;
-    private final SpeakerCreateValidator speakerCreateValidator;
     private final JwtService jwtService;
     private final AuthService authService;
 
@@ -51,7 +50,7 @@ public class SpeakerController {
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(required = false, value = "_start", defaultValue = "0") Integer start,
                                     @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
-                                    @RequestParam(required = false, value = "_sort", defaultValue = "name") String sort,
+                                    @RequestParam(required = false, value = "_sort", defaultValue = "firstName") String sort,
                                     @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order,
                                     @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
                                     @RequestParam(required = false, value = "id") List<UUID> ids
@@ -83,7 +82,7 @@ public class SpeakerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody SpeakerCreateRequest speaker,
+    public ResponseEntity<?> save(@RequestBody @Valid SpeakerCreateRequest speaker,
                                   @RequestHeader(value = "Authorization", required = false) String token
     ) {
         try {
@@ -94,7 +93,6 @@ public class SpeakerController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            // speakerCreateValidator.validate(speaker);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(speakerService.create(speaker));
@@ -111,7 +109,7 @@ public class SpeakerController {
 
     @PutMapping("/{speakerId}")
     public ResponseEntity<?> update(@PathVariable  UUID speakerId,
-                                    @RequestBody SpeakerCreateRequest speaker,
+                                    @RequestBody @Valid SpeakerCreateRequest speaker,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws NotFoundException {
         try {
@@ -122,7 +120,6 @@ public class SpeakerController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            // speakerCreateValidator.validate(speaker);
             speakerService.findById(speakerId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
