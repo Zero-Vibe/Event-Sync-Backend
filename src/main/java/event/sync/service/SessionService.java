@@ -4,6 +4,7 @@ import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.model.Session;
+import event.sync.model.Speaker;
 import event.sync.repository.EventRepository;
 import event.sync.repository.RoomRepository;
 import event.sync.repository.SessionRepository;
@@ -14,10 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -52,8 +53,10 @@ public class SessionService {
                 .startTime(sessionDto.getStartTime())
                 .endTime(sessionDto.getEndTime())
                 .capacity(sessionDto.getCapacity())
-                .speakers(speakerRepository.findAllById(sessionDto.getSpeakersId()))
+                .speakers(new ArrayList<>())
                 .build();
+
+        setSpeakersAndCheck(session, sessionDto.getSpeakersId());
 
         return sessionRepository.save(session);
     }
@@ -61,17 +64,15 @@ public class SessionService {
     @Transactional
     public Session update(UUID sessionId, SessionCreateRequest newSession) throws NotFoundException {
         Session session = findById(sessionId);
+
         roomRepository.findById(session.getRoomId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Specified room does not exist: " + session.getRoomId()));
-        if (newSession.getEventId() != null) {
-            session.setEvent(eventRepository.findById(newSession.getEventId()).orElseThrow(() -> new NotFoundException("Event not found: " + session.getEventId())));
-        }
-        if (newSession.getRoomId() != null) {
-            session.setRoom(roomRepository.findById(newSession.getRoomId()).orElseThrow(() -> new NotFoundException("Specified room does not exist: " + newSession.getRoomId())));
-        }
-        if (newSession.getSpeakersId() != null && !newSession.getSpeakersId().isEmpty()) {
-            session.setSpeakers(speakerRepository.findAllById(newSession.getSpeakersId()));
-        }
+                .orElseThrow(() -> new NotFoundException("Specified room does not exist: " + session.getRoomId()));
+
+        session.setEvent(eventRepository.findById(newSession.getEventId()).orElseThrow(() -> new NotFoundException("Event not found: " + session.getEventId())));
+        session.setRoom(roomRepository.findById(newSession.getRoomId()).orElseThrow(() -> new NotFoundException("Specified room does not exist: " + newSession.getRoomId())));
+
+        session.setSpeakers(setSpeakersAndCheck(session, newSession.getSpeakersId()));
+
         return sessionRepository.save(Session.builder()
                 .id(session.getId())
                 .event(session.getEvent())
@@ -96,4 +97,23 @@ public class SessionService {
         }
         sessionRepository.deleteById(sessionId);
     }
+
+    private List<Speaker> setSpeakersAndCheck(Session session, List<UUID> speakerIds) throws NotFoundException {
+        List<Speaker> speakers = speakerRepository.findAllById(speakerIds);
+        if (speakers.isEmpty()) {
+            throw new NotFoundException("No speaker found");
+        }
+        if (speakers.size() != speakerIds.size()) {
+            throw new NotFoundException("Speakers not found; IDs=["
+                    + speakerIds.stream()
+                    .filter(id -> !session.getSpeakers().stream()
+                            .map(Speaker::getId).toList().contains(id))
+                    .map(UUID::toString)
+                    .toList()
+                    + "]");
+        }
+        session.setSpeakers(speakers);
+        return speakers;
+    }
+
 }

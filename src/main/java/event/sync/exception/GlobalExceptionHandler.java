@@ -55,8 +55,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public void handleException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("errors", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -10,6 +10,7 @@ import event.sync.service.JwtService;
 import event.sync.service.SessionService;
 import event.sync.validator.SessionCreateValidator;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -81,7 +82,7 @@ public class SessionController {
 
     @PostMapping
     public ResponseEntity<?> createSession(@PathVariable UUID eventId,
-                                           @RequestBody SessionCreateRequest session,
+                                           @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
                                            ) throws NotFoundException {
         try {
@@ -92,7 +93,6 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            // sessionCreateValidator.validate(session);
             eventService.findById(eventId);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
@@ -111,7 +111,7 @@ public class SessionController {
     @PutMapping("/{sessionId}")
     public ResponseEntity<?> updateSession(@PathVariable UUID eventId,
                                            @PathVariable UUID  sessionId,
-                                           @RequestBody SessionCreateRequest session,
+                                           @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
                                             ) throws NotFoundException {
         try {
@@ -122,7 +122,6 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            // sessionCreateValidator.validate(session);
             isEventRelated(eventId, sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
