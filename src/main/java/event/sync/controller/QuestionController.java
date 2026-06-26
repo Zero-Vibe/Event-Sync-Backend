@@ -6,9 +6,7 @@ import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.model.Question;
 import event.sync.model.Session;
-import event.sync.repository.QuestionRepository;
 import event.sync.service.*;
-import event.sync.validator.QuestionCreateValidator;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +27,8 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final EventService eventService;
-    private final QuestionCreateValidator questionCreateValidator;
     private final SessionService sessionService;
     private final JwtService jwtService;
-    private final QuestionRepository questionRepository;
     private final AuthService authService;
 
     @GetMapping("/{eventId}/sessions/{sessionId}/questions")
@@ -79,7 +75,7 @@ public class QuestionController {
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,
                                           @RequestBody @Valid QuestionCreateRequest question,
-                                          @RequestHeader(name = "Authorization", required = true) String token
+                                          @RequestHeader(name = "Authorization") String token
     ) throws NotFoundException, BadRequestException {
         try {
             if (token == null || token.isBlank()) {
@@ -114,7 +110,7 @@ public class QuestionController {
                                         @PathVariable UUID sessionId,
                                         @PathVariable UUID questionId,
                                         @RequestParam boolean upvote,
-                                        @RequestHeader(name = "Authorization", required = true) String token
+                                        @RequestHeader(name = "Authorization") String token
     ) throws NotFoundException, BadRequestException {
         try {
             if (token == null || token.isBlank()) {
