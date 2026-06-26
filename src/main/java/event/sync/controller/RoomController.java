@@ -8,6 +8,7 @@ import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import event.sync.service.RoomService;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -63,7 +64,7 @@ public class RoomController {
 
     @PostMapping("/rooms")
     public ResponseEntity<?> createRoom(
-            @RequestBody RoomRequest roomRequest,
+            @RequestBody @Valid RoomRequest roomRequest,
             @RequestHeader("Authorization") String token
     ) {
         if (token == null) {
@@ -111,7 +112,7 @@ public class RoomController {
     @PutMapping("/rooms/{id}")
     public ResponseEntity<?> updateRoom(
             @PathVariable UUID id,
-            @RequestBody RoomRequest roomRequest,
+            @RequestBody @Valid RoomRequest roomRequest,
             @RequestHeader("Authorization") String token
     ) throws NotFoundException {
         if (token == null) {
