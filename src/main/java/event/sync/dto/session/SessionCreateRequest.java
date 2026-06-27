@@ -1,9 +1,6 @@
 package event.sync.dto.session;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +29,11 @@ public class SessionCreateRequest {
 
     @NotNull(message = "Property \"endTime\" must be provided")
     private Instant endTime;
+
+    @AssertTrue(message = "startTime must be before endTime")
+    private boolean isStartTimeValid() {
+        return startTime.isBefore(endTime);
+    };
 
     @NotNull(message = "Property \"roomId\" not set")
     private UUID roomId;
