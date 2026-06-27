@@ -36,96 +36,62 @@ public class UserController {
                                     @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
                                     @RequestParam(required = false, value = "id") List<UUID> ids,
                                     @RequestHeader("Authorization") String token) {
-        try {
-            authService.checkIfAdmin(jwtService.decodeToken(token));
+        authService.checkIfAdmin(jwtService.decodeToken(token));
 
-            if (ids != null && !ids.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .header("Content-Type", "application/json")
-                        .body(userService.getMany(ids));
-            }
-
-            int pageSize = end - start;
-            int pageNumber = start / pageSize;
-
-            Page<User> pagedResult = userService.getAll(pageNumber, pageSize, sort, order, filterJson);
-
+        if (ids != null && !ids.isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK)
-                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
                     .header("Content-Type", "application/json")
-                    .body(pagedResult.getContent());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
+                    .body(userService.getMany(ids));
         }
+
+        int pageSize = end - start;
+        int pageNumber = start / pageSize;
+
+        Page<User> pagedResult = userService.getAll(pageNumber, pageSize, sort, order, filterJson);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                .header("Content-Type", "application/json")
+                .body(pagedResult.getContent());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id,
-                                     @RequestHeader("Authorization") String token) {
-        try {
-            authService.checkIfAdmin(jwtService.decodeToken(token));
+                                     @RequestHeader("Authorization") String token) throws NotFoundException {
+        authService.checkIfAdmin(jwtService.decodeToken(token));
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(userService.findById(id));
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(userService.findById(id));
     }
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody @Valid RegisterRequest request,
-                                    @RequestHeader("Authorization") String token) {
-        try {
+                                    @RequestHeader("Authorization") String token) throws ConflictException {
             authService.checkIfAdmin(jwtService.decodeToken(token));
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header("Content-Type", "application/json")
-                    .body(userService.create(request));
-        } catch (ConflictException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Content-Type", "application/json")
+                .body(userService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id,
                                     @RequestBody UserUpdateRequest request,
-                                    @RequestHeader("Authorization") String token) {
-        try {
-            authService.checkIfAdmin(jwtService.decodeToken(token));
+                                    @RequestHeader("Authorization") String token) throws  NotFoundException, ConflictException {
+        authService.checkIfAdmin(jwtService.decodeToken(token));
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(userService.update(id, request));
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        } catch (ConflictException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable UUID id,
-                                    @RequestHeader("Authorization") String token) {
-        try {
-            authService.checkIfAdmin(jwtService.decodeToken(token));
+                                    @RequestHeader("Authorization") String token) throws  NotFoundException {
+        authService.checkIfAdmin(jwtService.decodeToken(token));
 
-            userService.delete(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        userService.delete(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

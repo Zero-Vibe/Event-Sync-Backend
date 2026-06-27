@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -34,24 +33,14 @@ public class SessionController {
     @GetMapping("/{sessionId}")
     public ResponseEntity<?> findById(@PathVariable UUID eventId,
                                       @PathVariable UUID sessionId) throws NotFoundException {
-        try {
-            isEventRelated(
-                    eventService.findById(eventId),
-                    sessionService.findById(sessionId)
-            );
+        isEventRelated(
+                eventService.findById(eventId),
+                sessionService.findById(sessionId)
+        );
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(sessionService.findById(sessionId));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(sessionService.findById(sessionId));
     }
 
     @GetMapping
@@ -60,27 +49,17 @@ public class SessionController {
                                             @RequestParam(required = false, value = "_end", defaultValue = "10") Integer end,
                                             @RequestParam(required = false, value = "_sort", defaultValue = "startTime") String sort,
                                             @RequestParam(required = false, value = "_order", defaultValue = "ASC") String order) throws NotFoundException {
-        try {
-            eventService.findById(eventId);
+        eventService.findById(eventId);
 
-            int pageSize = end - start;
-            int pageNumber = start / pageSize;
+        int pageSize = end - start;
+        int pageNumber = start / pageSize;
 
-            Page<Session> pagedResult = sessionService.getAll(pageNumber, pageSize, sort, order, eventId);
+        Page<Session> pagedResult = sessionService.getAll(pageNumber, pageSize, sort, order, eventId);
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
-                    .body(pagedResult.getContent());
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                .body(pagedResult.getContent());
     }
 
     @PostMapping
@@ -88,27 +67,13 @@ public class SessionController {
                                            @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
                                            ) throws NotFoundException, BadRequestException {
-        try {
-            if (token == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            isInEventTimeRange(eventService.findById(eventId), session);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header("Content-Type", "application/json")
-                    .body(sessionService.create(session));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        isInEventTimeRange(eventService.findById(eventId), session);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Content-Type", "application/json")
+                .body(sessionService.create(session));
     }
 
     @PutMapping("/{sessionId}")
@@ -117,29 +82,15 @@ public class SessionController {
                                            @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
                                             ) throws NotFoundException, BadRequestException {
-        try {
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            Event event = eventService.findById(eventId);
-            isInEventTimeRange(event, session);
-            isEventRelated(event, sessionService.findById(sessionId));
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(sessionService.update(sessionId, session));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        Event event = eventService.findById(eventId);
+        isInEventTimeRange(event, session);
+        isEventRelated(event, sessionService.findById(sessionId));
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(sessionService.update(sessionId, session));
     }
 
     @DeleteMapping("/{sessionId}")
@@ -147,26 +98,12 @@ public class SessionController {
                                            @PathVariable UUID  sessionId,
                                            @RequestHeader(value = "Authorization", required = false) String token
                                             ) throws NotFoundException {
-        try {
-            if (token == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            sessionService.delete(eventId, sessionId);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .build();
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getStackTrace());
-        }
+        sessionService.delete(eventId, sessionId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .build();
     }
 
     @GetMapping("/{sessionId}/register")
@@ -186,10 +123,6 @@ public class SessionController {
     public ResponseEntity<?> register(@PathVariable UUID eventId,
                                       @PathVariable UUID sessionId,
                                       @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException {
-        if  (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         User user = userService.findById(UUID.fromString(jwtService.decodeToken(token).getSubject()));
         Session session = sessionService.findById(sessionId);
 
@@ -206,10 +139,6 @@ public class SessionController {
     public ResponseEntity<?> unregister(@PathVariable UUID eventId,
                                         @PathVariable UUID sessionId,
                                         @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException {
-        if  (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
         userService.findById(userId);
         Session session = sessionService.findById(sessionId);

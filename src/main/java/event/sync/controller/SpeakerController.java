@@ -31,19 +31,9 @@ public class SpeakerController {
 
     @GetMapping("/{speakerId}")
     public ResponseEntity<?> findById(@PathVariable UUID speakerId) throws NotFoundException {
-        try {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(speakerService.findById(speakerId));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(speakerService.findById(speakerId));
     }
 
     @GetMapping
@@ -59,51 +49,27 @@ public class SpeakerController {
                     .header("Content-Type", "application/json")
                     .body(speakerService.getMany(ids));
         }
-        try {
-            int pageSize = end - start;
-            int pageNumber = start / pageSize;
+        int pageSize = end - start;
+        int pageNumber = start / pageSize;
 
-            Page<Speaker> pagedResult = speakerService.findAll(pageNumber, pageSize, sort, order, filterJson);
+        Page<Speaker> pagedResult = speakerService.findAll(pageNumber, pageSize, sort, order, filterJson);
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
-                    .body(pagedResult.getContent());
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .header("X-Total-Count", String.valueOf(pagedResult.getTotalElements()))
+                .body(pagedResult.getContent());
     }
 
     @PostMapping
     public ResponseEntity<?> save(@RequestBody @Valid SpeakerCreateRequest speaker,
                                   @RequestHeader(value = "Authorization", required = false) String token
     ) {
-        try {
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header("Content-Type", "application/json")
-                    .body(speakerService.create(speaker));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Content-Type", "application/json")
+                .body(speakerService.create(speaker));
     }
 
     @PutMapping("/{speakerId}")
@@ -111,53 +77,25 @@ public class SpeakerController {
                                     @RequestBody @Valid SpeakerCreateRequest speaker,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws NotFoundException {
-        try {
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            speakerService.findById(speakerId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(speakerService.update(speakerId, speaker));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        speakerService.findById(speakerId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(speakerService.update(speakerId, speaker));
     }
 
     @DeleteMapping("/{speakerId}")
     public ResponseEntity<?> delete(@PathVariable  UUID speakerId,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws NotFoundException {
-        try {
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        Claims claims = jwtService.decodeToken(token);
+        authService.checkIfAdmin(claims);
 
-            Claims claims = jwtService.decodeToken(token);
-            authService.checkIfAdmin(claims);
-
-            speakerService.findById(speakerId);
-            speakerService.delete(speakerId);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .build();
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
-        }
+        speakerService.findById(speakerId);
+        speakerService.delete(speakerId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .build();
     }
 }
