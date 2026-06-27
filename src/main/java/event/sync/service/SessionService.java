@@ -121,16 +121,21 @@ public class SessionService {
     }
 
     @Transactional
-    public void register(UUID sessionId, UUID userId) throws NotFoundException, BadRequestException {
-        Optional<SessionRegistration> registration = registrationRepository.findBySession_idAndUser_id(sessionId, userId);
+    public void register(Session session, User user) throws NotFoundException, BadRequestException {
+        if (getRegisterCount(session.getId()) >= session.getCapacity()) {
+            throw new BadRequestException("Session is full");
+        }
+
+        Optional<SessionRegistration> registration = registrationRepository
+                .findBySession_idAndUser_id(session.getId(), user.getId());
+
         if (registration.isPresent()) {
             throw new BadRequestException("Already registered to session");
         }
+
         registrationRepository.save(SessionRegistration.builder()
-                .session(sessionRepository.findById(sessionId)
-                        .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId)))
-                .user(userRepository.findById(userId)
-                        .orElseThrow(() -> new NotFoundException("User not found: " + userId)))
+                .session(session)
+                .user(user)
                 .registrationTime(Instant.now())
                 .build()
         );

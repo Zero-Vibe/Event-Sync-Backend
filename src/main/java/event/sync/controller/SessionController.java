@@ -5,6 +5,7 @@ import event.sync.exception.BadRequestException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.model.Session;
+import event.sync.model.User;
 import event.sync.service.*;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
@@ -170,7 +171,7 @@ public class SessionController {
 
     @GetMapping("/{sessionId}/register")
     public ResponseEntity<?> getRegisterCount(@PathVariable UUID eventId,
-                                              @PathVariable UUID sessionId) throws NotFoundException, BadRequestException {
+                                              @PathVariable UUID sessionId) throws NotFoundException {
 
         isEventRelated(
                 eventService.findById(eventId),
@@ -189,15 +190,15 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
-        userService.findById(userId);
+        User user = userService.findById(UUID.fromString(jwtService.decodeToken(token).getSubject()));
         Session session = sessionService.findById(sessionId);
+
         isEventRelated(eventService.findById(eventId), session);
         if (session.getStartTime().isBefore(Instant.now())) {
             throw new BadRequestException("Session has already been started");
         }
 
-        sessionService.register(sessionId, userId);
+        sessionService.register(session, user);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -212,6 +213,7 @@ public class SessionController {
         UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
         userService.findById(userId);
         Session session = sessionService.findById(sessionId);
+
         isEventRelated(eventService.findById(eventId), session);
         if (session.getStartTime().isBefore(Instant.now())) {
             throw new BadRequestException("Session has already been started");
