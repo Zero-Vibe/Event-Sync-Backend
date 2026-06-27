@@ -48,9 +48,6 @@ public class EventService {
     public Event create(EventCreateRequest request, UUID userId) throws NotFoundException, BadRequestException {
         User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        if (!request.getEndDateTime().isAfter(request.getStartDateTime())) {
-            throw new BadRequestException("End date must be after start date");
-        }
 
         return eventRepository.save(Event.builder()
                 .title(request.getTitle())
@@ -65,10 +62,6 @@ public class EventService {
     @Transactional
     public Event update(EventCreateRequest request, UUID id) throws NotFoundException, BadRequestException {
         Event toUpdate = findById(id);
-
-        if (!request.getEndDateTime().isAfter(request.getStartDateTime())) {
-            throw new BadRequestException("End date must be after start date");
-        }
 
         return eventRepository.save(Event.builder()
                 .id(id)

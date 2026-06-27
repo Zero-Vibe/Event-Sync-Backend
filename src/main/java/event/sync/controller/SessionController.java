@@ -33,7 +33,7 @@ public class SessionController {
     public ResponseEntity<?> findById(@PathVariable UUID eventId,
                                       @PathVariable UUID sessionId) throws NotFoundException {
         try {
-            isEventRelated(eventId, sessionId);
+            isEventRelated(eventService.findById(eventId), sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.findById(sessionId));
@@ -81,7 +81,7 @@ public class SessionController {
     public ResponseEntity<?> createSession(@PathVariable UUID eventId,
                                            @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
-                                           ) throws NotFoundException {
+                                           ) throws NotFoundException, BadRequestException {
         try {
             if (token == null) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -90,7 +90,7 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            eventService.findById(eventId);
+            isInEventTimeRange(eventService.findById(eventId), session);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
                     .body(sessionService.create(session));
@@ -110,7 +110,7 @@ public class SessionController {
                                            @PathVariable UUID  sessionId,
                                            @RequestBody @Valid SessionCreateRequest session,
                                            @RequestHeader(value = "Authorization", required = false) String token
-                                            ) throws NotFoundException {
+                                            ) throws NotFoundException, BadRequestException {
         try {
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -119,7 +119,9 @@ public class SessionController {
             Claims claims = jwtService.decodeToken(token);
             authService.checkIfAdmin(claims);
 
-            isEventRelated(eventId, sessionId);
+            Event event = eventService.findById(eventId);
+            isInEventTimeRange(event, session);
+            isEventRelated(event, sessionId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.update(sessionId, session));
@@ -161,19 +163,27 @@ public class SessionController {
         }
     }
 
-    private void isEventRelated(UUID eventId, UUID sessionId) throws NotFoundException {
-        Event event = eventService.findById(eventId);
+    private void isEventRelated(Event event, UUID sessionId) throws NotFoundException {
         if (event.getSessions().stream()
                 .noneMatch(s -> s.getId().equals(sessionId))) {
             throw new NotFoundException("Session not found in event: " + event.getTitle());
         }
     };
 
+    private void isInEventTimeRange(Event event, SessionCreateRequest session) throws BadRequestException {
+        if ((!event.getStartDateTime().equals(session.getStartTime()) && event.getStartDateTime().isAfter(session.getStartTime()))
+            || (!event.getEndDateTime().equals(session.getEndTime()) && event.getEndDateTime().isBefore(session.getEndTime()))) {
+            throw new BadRequestException("Session time range must be between within event time range: ["
+                    + event.getStartDateTime() + " - " + event.getEndDateTime()
+                    + "]");
+        }
+    }
+
     @GetMapping("/{sessionId}/register")
     public ResponseEntity<?> getRegisterCount(@PathVariable UUID eventId,
                                               @PathVariable UUID sessionId) throws NotFoundException, BadRequestException {
 
-        isEventRelated(eventId, sessionId);
+        isEventRelated(eventService.findById(eventId), sessionId);
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
                 .body(sessionService.getRegisterCount(sessionId));
@@ -189,7 +199,7 @@ public class SessionController {
 
         UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
         userService.findById(userId);
-        isEventRelated(eventId, sessionId);
+        isEventRelated(eventService.findById(eventId), sessionId);
 
         sessionService.register(sessionId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -205,7 +215,7 @@ public class SessionController {
 
         UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
         userService.findById(userId);
-        isEventRelated(eventId, sessionId);
+        isEventRelated(eventService.findById(eventId), sessionId);
 
         sessionService.unregister(sessionId, userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
