@@ -58,6 +58,13 @@ CREATE TABLE sessions (
     status session_status NOT NULL DEFAULT 'PUBLISHED'
 );
 
+CREATE TABLE session_registrations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    registration_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE sessions_speakers (
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     speakers_id UUID NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,

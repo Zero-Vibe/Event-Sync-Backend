@@ -5,10 +5,8 @@ import event.sync.exception.BadRequestException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.model.Session;
-import event.sync.service.AuthService;
-import event.sync.service.EventService;
-import event.sync.service.JwtService;
-import event.sync.service.SessionService;
+import event.sync.model.User;
+import event.sync.service.*;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @RestController
@@ -30,12 +29,17 @@ public class SessionController {
     private final EventService eventService;
     private final JwtService jwtService;
     private final AuthService authService;
+    private final UserService userService;
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<?> findById(@PathVariable UUID eventId,
                                       @PathVariable UUID sessionId) throws NotFoundException {
         try {
-            isEventRelated(eventService.findById(eventId), sessionId);
+            isEventRelated(
+                    eventService.findById(eventId),
+                    sessionService.findById(sessionId)
+            );
+
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.findById(sessionId));
@@ -123,7 +127,7 @@ public class SessionController {
 
             Event event = eventService.findById(eventId);
             isInEventTimeRange(event, session);
-            isEventRelated(event, sessionId);
+            isEventRelated(event, sessionService.findById(sessionId));
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(sessionService.update(sessionId, session));
@@ -165,9 +169,63 @@ public class SessionController {
         }
     }
 
-    private void isEventRelated(Event event, UUID sessionId) throws NotFoundException {
+    @GetMapping("/{sessionId}/register")
+    public ResponseEntity<?> getRegisterCount(@PathVariable UUID eventId,
+                                              @PathVariable UUID sessionId) throws NotFoundException {
+
+        isEventRelated(
+                eventService.findById(eventId),
+                sessionService.findById(sessionId)
+        );
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(sessionService.getRegisterCount(sessionId));
+    }
+
+    @PostMapping("/{sessionId}/register")
+    public ResponseEntity<?> register(@PathVariable UUID eventId,
+                                      @PathVariable UUID sessionId,
+                                      @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException {
+        if  (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = userService.findById(UUID.fromString(jwtService.decodeToken(token).getSubject()));
+        Session session = sessionService.findById(sessionId);
+
+        isEventRelated(eventService.findById(eventId), session);
+        if (session.getStartTime().isBefore(Instant.now())) {
+            throw new BadRequestException("Session has already been started");
+        }
+
+        sessionService.register(session, user);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{sessionId}/register")
+    public ResponseEntity<?> unregister(@PathVariable UUID eventId,
+                                        @PathVariable UUID sessionId,
+                                        @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException {
+        if  (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UUID userId = UUID.fromString(jwtService.decodeToken(token).getSubject());
+        userService.findById(userId);
+        Session session = sessionService.findById(sessionId);
+
+        isEventRelated(eventService.findById(eventId), session);
+        if (session.getStartTime().isBefore(Instant.now())) {
+            throw new BadRequestException("Session has already been started");
+        }
+
+        sessionService.unregister(sessionId, userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    private void isEventRelated(Event event, Session session) throws NotFoundException {
         if (event.getSessions().stream()
-                .noneMatch(s -> s.getId().equals(sessionId))) {
+                .noneMatch(s -> s.getId().equals(session.getId()))) {
             throw new NotFoundException("Session not found in event: " + event.getTitle());
         }
     };

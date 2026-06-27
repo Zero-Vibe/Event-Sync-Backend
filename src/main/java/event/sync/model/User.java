@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -38,4 +39,8 @@ public class User {
 
     @Column(columnDefinition = "TIMESTAMPTZ DEFAULT NOW()")
     private Instant joinDate;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<SessionRegistration> sessionRegistrations;
 }
