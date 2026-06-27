@@ -64,6 +64,10 @@ public class Session {
     private List<Speaker> speakers = new ArrayList<>();
 
     @JsonIgnore
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    private List<SessionRegistration> sessionRegistrations;
+
+    @JsonIgnore
     public boolean isLive() {
         return Instant.now().isAfter(startTime) && Instant.now().isBefore(endTime);
     }
