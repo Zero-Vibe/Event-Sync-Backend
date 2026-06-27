@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -68,7 +69,7 @@ public class EventController {
     ) throws NotFoundException, BadRequestException,  ConflictException {
         Claims claims = jwtService.decodeToken(token);
         authService.checkIfAdmin(claims);
-        checkIfEventTitleExists(request);
+        checkIfEventTitleExists(request, null);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("Content-Type", "application/json")
                 .body(eventService.create(request,
@@ -83,7 +84,7 @@ public class EventController {
             @RequestHeader("Authorization") String token
     )  throws NotFoundException, BadRequestException, ConflictException {
         authService.checkIfAdmin(jwtService.decodeToken(token));
-        checkIfEventTitleExists(request);
+        checkIfEventTitleExists(request, id);
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
                 .body(eventService.update(request,
@@ -102,8 +103,9 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    private void checkIfEventTitleExists(EventCreateRequest request) throws ConflictException {
-        if (eventService.findByTitle(request.getTitle()).isPresent()) {
+    private void checkIfEventTitleExists(EventCreateRequest request, UUID eventId) throws ConflictException {
+        Optional<Event> event = eventService.findByTitle(request.getTitle());
+        if (event.isPresent() && (eventId == null || !event.get().getId().equals(eventId))) {
             throw new ConflictException("Event title has already been used");
         }
     }
