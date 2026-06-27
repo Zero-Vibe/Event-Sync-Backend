@@ -3,6 +3,8 @@ package event.sync.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,4 +43,10 @@ public class Speaker {
     @Builder.Default
     @OneToMany(mappedBy = "speaker", fetch = FetchType.LAZY)
     private List<SpeakerLink> links = new ArrayList<>();
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "speakers", fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Builder.Default
+    private List<Session> sessions = new ArrayList<>();
 }
