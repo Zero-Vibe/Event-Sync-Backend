@@ -5,6 +5,8 @@ import event.sync.model.enums.LinkPlatform;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
@@ -25,6 +27,7 @@ public class SpeakerLink {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "speaker_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Speaker speaker;
     public UUID getSpeakerId() { return (speaker != null) ? speaker.getId() : null; }
 

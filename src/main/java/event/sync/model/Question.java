@@ -3,6 +3,8 @@ package event.sync.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +25,7 @@ public class Question {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false, referencedColumnName = "id")
     @JsonIgnore
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Session session;
     private UUID getSessionId() { return (session != null) ? session.getId() : null; }
 
@@ -31,6 +34,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User user;   // null = anonymous
 
     @Builder.Default

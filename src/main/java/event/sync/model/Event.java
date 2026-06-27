@@ -3,6 +3,8 @@ package event.sync.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User createdBy;
 
     @Builder.Default
