@@ -1,14 +1,10 @@
 package event.sync.service;
 
 import event.sync.dto.session.SessionCreateRequest;
+import event.sync.exception.BadRequestException;
 import event.sync.exception.NotFoundException;
-import event.sync.model.Event;
-import event.sync.model.Session;
-import event.sync.model.Speaker;
-import event.sync.repository.EventRepository;
-import event.sync.repository.RoomRepository;
-import event.sync.repository.SessionRepository;
-import event.sync.repository.SpeakerRepository;
+import event.sync.model.*;
+import event.sync.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,8 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,6 +26,8 @@ public class SessionService {
     private final RoomRepository roomRepository;
     private final EventRepository eventRepository;
     private final SpeakerRepository speakerRepository;
+    private final RegistrationRepository registrationRepository;
+    private final UserRepository userRepository;
 
     public Session findById(UUID sessionId) throws NotFoundException {
         return sessionRepository.findById(sessionId)
@@ -114,6 +114,33 @@ public class SessionService {
         }
         session.setSpeakers(speakers);
         return speakers;
+    }
+
+    public long getRegisterCount(UUID sessionId) {
+        return registrationRepository.countSessionRegistrationBySessionId(sessionId);
+    }
+
+    @Transactional
+    public void register(UUID sessionId, UUID userId) throws NotFoundException, BadRequestException {
+        Optional<SessionRegistration> registration = registrationRepository.findBySession_idAndUser_id(sessionId, userId);
+        if (registration.isPresent()) {
+            throw new BadRequestException("Already registered to session");
+        }
+        registrationRepository.save(SessionRegistration.builder()
+                .session(sessionRepository.findById(sessionId)
+                        .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId)))
+                .user(userRepository.findById(userId)
+                        .orElseThrow(() -> new NotFoundException("User not found: " + userId)))
+                .registrationTime(Instant.now())
+                .build()
+        );
+    }
+
+    @Transactional
+    public void unregister(UUID sessionId, UUID userId) throws NotFoundException {
+        registrationRepository.findBySession_idAndUser_id(sessionId, userId)
+                .orElseThrow(() ->  new NotFoundException("No registration found for session"));
+        registrationRepository.deleteSessionRegistrationsByIdAndUser_Id(sessionId, userId);
     }
 
 }
