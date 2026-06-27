@@ -121,7 +121,7 @@ public class SpeakerService {
         speakerRepository.deleteById(id);
     }
 
-    private void setSpeakerPicture(Speaker speaker) {
+    public void setSpeakerPicture(Speaker speaker) {
         speaker.setBase64Picture(imageService.getBase64Image(speaker.getPictureFileName()));
     }
 }

@@ -27,17 +27,21 @@ public class SessionService {
     private final EventRepository eventRepository;
     private final SpeakerRepository speakerRepository;
     private final RegistrationRepository registrationRepository;
-    private final UserRepository userRepository;
+    private final SpeakerService speakerService;
 
     public Session findById(UUID sessionId) throws NotFoundException {
-        return sessionRepository.findById(sessionId)
+        Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
+        session.getSpeakers().forEach(speakerService::setSpeakerPicture);
+        return session;
     }
 
     public Page<Session> getAll(int pageNumber, int pageSize, String sort, String order, UUID eventId) {
         Sort sortCondition = order.equalsIgnoreCase("ASC") ? Sort.by(sort).ascending() : Sort.by(sort).descending();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sortCondition);
-        return sessionRepository.findAllByEvent_Id(eventId, pageable);
+        Page<Session> pagedResult = sessionRepository.findAllByEvent_Id(eventId, pageable);
+        pagedResult.getContent().forEach(session -> session.getSpeakers().forEach(speakerService::setSpeakerPicture));
+        return pagedResult;
     }
 
     @Transactional
@@ -82,7 +86,6 @@ public class SessionService {
                 .startTime((newSession.getStartTime() != null) ? newSession.getStartTime() : session.getStartTime())
                 .endTime((newSession.getEndTime() != null) ? newSession.getEndTime() : session.getEndTime())
                 .capacity((newSession.getCapacity() != null) ? newSession.getCapacity() : session.getCapacity())
-                .status(session.getStatus())
                 .speakers(session.getSpeakers())
                 .build());
     }

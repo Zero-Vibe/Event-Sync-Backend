@@ -34,7 +34,6 @@ public class SpeakerLink {
     @Builder.Default
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private LinkPlatform platform = LinkPlatform.OTHER;
 
     @Column(nullable = false)

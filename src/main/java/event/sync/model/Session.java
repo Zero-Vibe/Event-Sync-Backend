@@ -57,12 +57,6 @@ public class Session {
     private Integer capacity;
 
     @Builder.Default
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    private SessionStatus status = SessionStatus.PUBLISHED;
-
-    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "sessions_speakers",
             joinColumns = @JoinColumn(name = "session_id"),
