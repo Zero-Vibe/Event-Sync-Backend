@@ -35,7 +35,8 @@ public class SessionRegistration {
     private User user;
 
     @Column
-    private Instant registrationTime;
+    @Builder.Default
+    private Instant registrationTime =  Instant.now();
 
     private UUID getSessionId() {
         return (session != null) ? session.getId() : null;
