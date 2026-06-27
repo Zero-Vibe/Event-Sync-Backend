@@ -41,34 +41,24 @@ public class QuestionController {
                                           @RequestParam(required = false, value = "filter", defaultValue = "{}") String filterJson,
                                           @RequestParam(required = false, value = "id") List<UUID> ids
     ) throws NotFoundException {
-        try {
-            isEventRelated(eventId, sessionId);
-            sessionService.findById(sessionId);
+        isEventRelated(eventId, sessionId);
+        sessionService.findById(sessionId);
 
-            if (ids != null && !ids.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .header("Content-Type", "application/json")
-                        .body(questionService.getMany(ids));
-            }
-
-            int pageSize = end - start;
-            int pageNumber = start / pageSize;
-
-            Page<Question> pagedResultPage = questionService.getAllQuestions(sessionId, pageNumber, pageSize, sort, order, filterJson);
-
+        if (ids != null && !ids.isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .header("X-Total-Count", String.valueOf(pagedResultPage.getTotalElements()))
-                    .body(pagedResultPage.getContent());
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
+                    .body(questionService.getMany(ids));
         }
+
+        int pageSize = end - start;
+        int pageNumber = start / pageSize;
+
+        Page<Question> pagedResultPage = questionService.getAllQuestions(sessionId, pageNumber, pageSize, sort, order, filterJson);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .header("X-Total-Count", String.valueOf(pagedResultPage.getTotalElements()))
+                .body(pagedResultPage.getContent());
     }
 
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
@@ -77,32 +67,18 @@ public class QuestionController {
                                           @RequestBody @Valid QuestionCreateRequest question,
                                           @RequestHeader(name = "Authorization") String token
     ) throws NotFoundException, BadRequestException {
-        try {
-            if (token == null || token.isBlank()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        Claims claims = jwtService.decodeToken(token);
+        UUID userId = question.getIsAnonymous() == true ? null : UUID.fromString(claims.getSubject());
 
-            Claims claims = jwtService.decodeToken(token);
-            UUID userId = question.getIsAnonymous() == true ? null : UUID.fromString(claims.getSubject());
+        isEventRelated(eventId, sessionId);
+        Session session = sessionService.findById(sessionId);
 
-            isEventRelated(eventId, sessionId);
-            Session session = sessionService.findById(sessionId);
-
-            if (!session.isLive()) {
-                throw new BadRequestException("Session is not live");
-            }
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header("Content-Type", "application/json")
-                    .body(questionService.save(session, userId, question));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
+        if (!session.isLive()) {
+            throw new BadRequestException("Session is not live");
         }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Content-Type", "application/json")
+                .body(questionService.save(session, userId, question));
     }
 
     @PostMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}/vote")
@@ -112,29 +88,16 @@ public class QuestionController {
                                         @RequestParam boolean upvote,
                                         @RequestHeader(name = "Authorization") String token
     ) throws NotFoundException, BadRequestException {
-        try {
-            if (token == null || token.isBlank()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-            jwtService.decodeToken(token);
+        jwtService.decodeToken(token);
 
-            isEventRelated(eventId, sessionId);
-            Session session = sessionService.findById(sessionId);
-            if (!session.isLive()) {
-                throw new BadRequestException("Session is not live");
-            }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(questionService.updateVote(questionId, upvote));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .header("Content-Type", "application/json")
-                    .body(e.getReason());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(e.getMessage());
+        isEventRelated(eventId, sessionId);
+        Session session = sessionService.findById(sessionId);
+        if (!session.isLive()) {
+            throw new BadRequestException("Session is not live");
         }
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(questionService.updateVote(questionId, upvote));
     }
 
     @DeleteMapping("/{eventId}/sessions/{sessionId}/questions/{questionId}")

@@ -10,7 +10,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -47,6 +46,21 @@ public class GlobalExceptionHandler {
                 .body(Map.of("code", 400, "message", e.getMessage()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, ?>> handleValidationException(MethodArgumentNotValidException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("code", 400, "message",
+                        ex.getFieldErrors().stream()
+                                .map(err -> err.getDefaultMessage())
+                                .toList()
+                ));
+    }
+
+    @ExceptionHandler(MissingTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingTokenException(MissingTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("code", 401, "message", ex.getMessage()));
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, Object>> handleConflictException(ConflictException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -58,15 +72,5 @@ public class GlobalExceptionHandler {
         log.error(ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("errors", ex.getMessage()));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, List<String>>> handleValidationException(MethodArgumentNotValidException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("errors",
-                        ex.getFieldErrors().stream()
-                        .map(err -> err.getDefaultMessage())
-                        .toList()
-                ));
     }
 }

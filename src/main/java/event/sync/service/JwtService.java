@@ -1,5 +1,6 @@
 package event.sync.service;
 
+import event.sync.exception.MissingTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -41,6 +42,9 @@ public class JwtService {
     }
 
     public Claims decodeToken(String token) {
+        if  (token == null || token.isBlank()) {
+            throw new MissingTokenException("Missing token");
+        }
         String compact = token.trim();
         if (compact.toLowerCase().startsWith("bearer ")) {
             compact = compact.substring(7).trim();

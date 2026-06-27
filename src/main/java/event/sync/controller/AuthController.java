@@ -32,10 +32,6 @@ public class AuthController {
 
     @PostMapping("/authStatus")
     public ResponseEntity<?> checkAuth(@RequestHeader(name = "Authorization") String token) {
-        if  (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .build();
-        }
         jwtService.decodeToken(token);
         return ResponseEntity.status(HttpStatus.OK).build();
     }

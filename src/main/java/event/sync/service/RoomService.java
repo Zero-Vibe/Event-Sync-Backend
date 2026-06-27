@@ -2,6 +2,7 @@ package event.sync.service;
 
 import event.sync.dto.room.RoomRequest;
 import event.sync.dto.room.RoomResponse;
+import event.sync.exception.ConflictException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Room;
 import event.sync.repository.RoomRepository;
@@ -38,9 +39,9 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomResponse save(RoomRequest roomRequest) {
+    public RoomResponse save(RoomRequest roomRequest) throws ConflictException {
         if (roomRepository.findByName(roomRequest.getName()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Room already exists");
+            throw new ConflictException("Room already exists");
         }
         Room room = Room.builder()
                 .name(roomRequest.getName())
