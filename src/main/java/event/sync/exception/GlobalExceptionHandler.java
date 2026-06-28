@@ -1,7 +1,10 @@
 package event.sync.exception;
 
+import event.sync.service.AuthService;
 import event.sync.service.AuthService.InvalidCredentialsException;
 import event.sync.service.AuthService.EmailAlreadyExistsException;
+import io.jsonwebtoken.ClaimJwtException;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,16 +25,26 @@ public class GlobalExceptionHandler {
                 .body(Map.of("code", 401, "message", ex.getMessage()));
     }
 
+    @ExceptionHandler( { JwtException.class, ClaimJwtException.class, ExpiredJwtException.class} )
+    public ResponseEntity<Map<String, Object>> handleJwtException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("code", 401, "message", "Invalid or expired token"));
+    }
+
+    @ExceptionHandler(MissingTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingTokenException(MissingTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("code", 401, "message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AuthService.PermissionDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingTokenException(AuthService.PermissionDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("code", 403, "message", ex.getMessage()));
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("code", 409, "message", ex.getMessage()));
-    }
-
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<Map<String, Object>> handleJwtException(JwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", 401, "message", "Invalid or expired token"));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -54,11 +67,6 @@ public class GlobalExceptionHandler {
                                 .map(err -> err.getDefaultMessage())
                                 .toList()
                 ));
-    }
-
-    @ExceptionHandler(MissingTokenException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingTokenException(MissingTokenException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("code", 401, "message", ex.getMessage()));
     }
 
     @ExceptionHandler(ConflictException.class)
