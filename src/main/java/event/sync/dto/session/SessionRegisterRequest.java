@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public class SessionRegisterRequest {
-    @NotNull private UUID sessionId;
-    @NotNull private UUID userId;
+    @NotNull(message = "sessionId must be provided") private UUID sessionId;
+    @NotNull(message = "userId must bes provided") private UUID userId;
 }
