@@ -1,6 +1,7 @@
 package event.sync.service;
 
 import event.sync.dto.auth.*;
+import event.sync.exception.ConflictException;
 import event.sync.model.User;
 import event.sync.repository.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -20,7 +21,7 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository
-                .findByEmail(request.getEmail())
+                .findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(InvalidCredentialsException::new);
 
         if (!BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
@@ -37,12 +38,17 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse register(RegisterRequest request) {
+    public LoginResponse register(RegisterRequest request) throws ConflictException {
+        request.setEmail(request.getEmail().toLowerCase());
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("Email already registered");
         }
 
         String passwordHash = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
+        if (userRepository.findByName(request.getName()).isPresent()) {
+            throw new ConflictException("Username already registered");
+        };
 
         User user = userRepository.save(User.builder()
                 .isAdmin(false)
