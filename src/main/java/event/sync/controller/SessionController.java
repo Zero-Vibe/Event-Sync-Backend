@@ -2,6 +2,7 @@ package event.sync.controller;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.BadRequestException;
+import event.sync.exception.ConflictException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.Event;
 import event.sync.model.Session;
@@ -122,7 +123,7 @@ public class SessionController {
     @PostMapping("/{sessionId}/register")
     public ResponseEntity<?> register(@PathVariable UUID eventId,
                                       @PathVariable UUID sessionId,
-                                      @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException {
+                                      @RequestHeader(value = "Authorization") String token) throws NotFoundException, BadRequestException, ConflictException {
         User user = userService.findById(UUID.fromString(jwtService.decodeToken(token).getSubject()));
         Session session = sessionService.findById(sessionId);
 

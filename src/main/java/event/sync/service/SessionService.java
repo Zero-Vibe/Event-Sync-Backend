@@ -2,6 +2,7 @@ package event.sync.service;
 
 import event.sync.dto.session.SessionCreateRequest;
 import event.sync.exception.BadRequestException;
+import event.sync.exception.ConflictException;
 import event.sync.exception.NotFoundException;
 import event.sync.model.*;
 import event.sync.repository.*;
@@ -124,7 +125,7 @@ public class SessionService {
     }
 
     @Transactional
-    public void register(Session session, User user) throws NotFoundException, BadRequestException {
+    public void register(Session session, User user) throws BadRequestException, ConflictException {
         if (getRegisterCount(session.getId()) >= session.getCapacity()) {
             throw new BadRequestException("Session is full");
         }
@@ -133,7 +134,7 @@ public class SessionService {
                 .findBySession_idAndUser_id(session.getId(), user.getId());
 
         if (registration.isPresent()) {
-            throw new BadRequestException("Already registered to session");
+            throw new ConflictException("Already registered to session");
         }
 
         registrationRepository.save(SessionRegistration.builder()
