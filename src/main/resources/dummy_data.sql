@@ -4,9 +4,11 @@
 INSERT INTO users (id, is_admin, email, password_hash, name, join_date)
 VALUES
     ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', TRUE, 'admin@eventsync.com',
-     '$2a$10$dummyhashfordevuseonly123456789abcdefghijklmnopqrstuvwxyz01', 'Admin', NOW()),
+     '$2b$10$DpCQMfkI3HPnuzV9lVkcMeqYjoD4ceatzqz5gIEggqX5Ig0FzCqIS', 'Admin', NOW()),
+    -- ^ password: admin123
     ('b2c3d4e5-f6a7-8901-bcde-f12345678901', FALSE, 'john@eventsync.com',
-     '$2a$10$dummyhashfordevuseonly123456789abcdefghijklmnopqrstuvwxyz02', 'John Doe', NOW());
+     '$2b$10$DpCQMfkI3HPnuzV9lVkcMeqYjoD4ceatzqz5gIEggqX5Ig0FzCqIS', 'John Doe', NOW());
+    -- ^ password: admin123 (same hash for dev purposes)
 
 -- ============ EVENTS ============
 INSERT INTO events (id, title, description, start_date_time, end_date_time, location, user_id)
@@ -56,32 +58,32 @@ VALUES
      'WEBSITE', 'https://tomchen.dev', 'Personal site');
 
 -- ============ SESSIONS ============
-INSERT INTO sessions (id, event_id, room_id, title, description, start_time, end_time, capacity, status)
+INSERT INTO sessions (id, event_id, room_id, title, description, start_time, end_time, capacity)
 VALUES
     ('d6e7f8a9-b0c1-2345-defa-456789012345',
      'c3d4e5f6-a7b8-9012-cdef-123456789012',
      'e5f6a7b8-c9d0-1234-efab-345678901234',
      'Opening Keynote: The Future of Web Development',
      'A look at emerging trends in web technologies and what the next decade holds.',
-     '2026-09-15 09:00:00', '2026-09-15 10:30:00', 500, 'PUBLISHED'),
+     '2026-09-15 09:00:00', '2026-09-15 10:30:00', 500),
     ('e7f8a9b0-c1d2-3456-efab-567890123456',
      'c3d4e5f6-a7b8-9012-cdef-123456789012',
      'f6a7b8c9-d0e1-2345-fabc-456789012345',
      'Building with Web3: Hands-On Workshop',
      'An interactive workshop on smart contracts, dApps, and decentralized storage.',
-     '2026-09-15 14:00:00', '2026-09-15 16:00:00', 50, 'PUBLISHED'),
+     '2026-09-15 14:00:00', '2026-09-15 16:00:00', 50),
     ('f8a9b0c1-d2e3-4567-fabc-678901234567',
      'c3d4e5f6-a7b8-9012-cdef-123456789012',
      'a7b8c9d0-e1f2-3456-abcd-567890123456',
      'Microservices Deep Dive',
      'From monoliths to microservices: patterns, pitfalls, and practical advice.',
-     '2026-09-16 10:00:00', '2026-09-16 12:00:00', 200, 'PUBLISHED'),
+     '2026-09-16 10:00:00', '2026-09-16 12:00:00', 200),
     ('a9b0c1d2-e3f4-5678-abcd-789012345678',
      'd4e5f6a7-b8c9-0123-defa-234567890123',
      'e5f6a7b8-c9d0-1234-efab-345678901234',
      'Closing Panel: What''s Next in Tech',
      'Industry leaders discuss the future of AI, cloud, and developer experience.',
-     '2025-03-11 15:00:00', '2025-03-11 17:00:00', 300, 'ENDED');
+     '2025-03-11 15:00:00', '2025-03-11 17:00:00', 300);
 
 -- ============ SESSION-SPEAKER ASSIGNMENTS ============
 INSERT INTO sessions_speakers (session_id, speakers_id)

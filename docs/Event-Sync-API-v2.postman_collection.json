@@ -1,0 +1,1400 @@
+{
+  "info": {
+    "name": "Event Sync API v2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response has access_token\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"access_token\");",
+                  "  pm.collectionVariables.set(\"token\", json.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@eventsync.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/login",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response has access_token\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"access_token\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"New User\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Check Auth Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/auth/authStatus",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "authStatus"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Create Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Response has id\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json).to.have.property(\"name\");",
+                  "  pm.collectionVariables.set(\"roomId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Amphithéâtre\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/rooms",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get all Rooms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Response has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/rooms",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get Room by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response matches roomId\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.eql(pm.collectionVariables.get(\"roomId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Name updated\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.name).to.eql(\"Grand Amphithéâtre - Rénové\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Amphithéâtre - Rénové\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Speakers",
+      "item": [
+        {
+          "name": "Create Speaker",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Response has id\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json.firstName).to.eql(\"John\");",
+                  "  pm.collectionVariables.set(\"speakerId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"base64Picture\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12P4z8BQDwAEgAF/QualzQAAAABJRU5ErkJggg==\",\n  \"biography\": \"Expert en cybersécurité\",\n  \"links\": [\n    {\n      \"platform\": \"GITHUB\",\n      \"url\": \"https://github.com/johndoe\",\n      \"label\": \"GitHub\"\n    },\n    {\n      \"platform\": \"LINKEDIN\",\n      \"url\": \"https://linkedin.com/in/johndoe\",\n      \"label\": \"LinkedIn\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/speakers",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers"]
+            }
+          }
+        },
+        {
+          "name": "Get all Speakers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/speakers",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers"]
+            }
+          }
+        },
+        {
+          "name": "Get Speaker by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Speaker matches\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.eql(pm.collectionVariables.get(\"speakerId\"));",
+                  "  pm.expect(json).to.have.property(\"firstName\");",
+                  "  pm.expect(json).to.have.property(\"links\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Speaker",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Biography updated\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.biography).to.include(\"cloud\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"base64Picture\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12P4z8BQDwAEgAF/QualzQAAAABJRU5ErkJggg==\",\n  \"biography\": \"Expert en cybersécurité et cloud computing\",\n  \"links\": [\n    {\n      \"platform\": \"GITHUB\",\n      \"url\": \"https://github.com/johndoe\",\n      \"label\": \"GitHub\"\n    },\n    {\n      \"platform\": \"WEBSITE\",\n      \"url\": \"https://johndoe.dev\",\n      \"label\": \"Site personnel\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Speaker",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Response has id\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json.title).to.eql(\"Conférence Tech 2026\");",
+                  "  pm.collectionVariables.set(\"eventId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Conférence Tech 2026\",\n  \"description\": \"Une conférence sur les technologies modernes\",\n  \"startDateTime\": \"2026-07-15T09:00:00Z\",\n  \"endDateTime\": \"2026-07-17T18:00:00Z\",\n  \"location\": \"Paris, France\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Get all Events",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Event matches\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.eql(pm.collectionVariables.get(\"eventId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Title updated\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.title).to.include(\"Édition Été\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Conférence Tech 2026 - Édition Été\",\n  \"description\": \"Une conférence sur les technologies modernes (mise à jour)\",\n  \"startDateTime\": \"2026-07-15T09:00:00Z\",\n  \"endDateTime\": \"2026-07-17T18:00:00Z\",\n  \"location\": \"Paris, France\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Response has id\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json.title).to.eql(\"Introduction à Spring Boot\");",
+                  "  pm.collectionVariables.set(\"sessionId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Introduction à Spring Boot\",\n  \"description\": \"Les fondamentaux de Spring Boot\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"2026-07-15T10:00:00Z\",\n  \"endTime\": \"2026-07-15T11:30:00Z\",\n  \"capacity\": 100,\n  \"speakersId\": [\"{{speakerId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get all Sessions for Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get Session by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Session matches\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.eql(pm.collectionVariables.get(\"sessionId\"));",
+                  "  pm.expect(json).to.have.property(\"eventId\");",
+                  "  pm.expect(json).to.have.property(\"speakers\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Title updated\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.title).to.include(\"Spring Boot 4\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Introduction à Spring Boot 4\",\n  \"description\": \"Les nouveautés de Spring Boot 4\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"2026-07-15T10:00:00Z\",\n  \"endTime\": \"2026-07-15T11:30:00Z\",\n  \"capacity\": 150,\n  \"speakersId\": [\"{{speakerId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Registration Count",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is a number\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.a(\"number\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register for Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        },
+        {
+          "name": "Unregister from Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "Post a Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Response has id\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json.content).to.eql(\"Quels sont les prérequis ?\");",
+                  "  pm.collectionVariables.set(\"questionId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Quels sont les prérequis ?\",\n  \"isAnonymous\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Post Anonymous Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"User is null (anonymous)\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.user).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Cette session est-elle enregistrée ?\",\n  \"isAnonymous\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Get all Questions for Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Vote Up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Upvote incremented\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.upvotes).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}/vote?upvote=true",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}", "vote"],
+              "query": [
+                { "key": "upvote", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vote Down",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}/vote?upvote=false",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}", "vote"],
+              "query": [
+                { "key": "upvote", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get all Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is an array\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Has X-Total-Count header\", () => {",
+                  "  pm.expect(pm.response.headers.get(\"X-Total-Count\")).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/users",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response is a user\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json).to.have.property(\"email\");",
+                  "  pm.expect(json).to.have.property(\"name\");",
+                  "  pm.collectionVariables.set(\"userId\", json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"User created\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"id\");",
+                  "  pm.expect(json.name).to.eql(\"Test User\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test User\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Name updated\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.name).to.eql(\"Test User Updated\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User Updated\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "token", "value": "" },
+    { "key": "roomId", "value": "" },
+    { "key": "speakerId", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "userId", "value": "" }
+  ]
+}

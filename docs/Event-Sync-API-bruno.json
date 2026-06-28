@@ -1,0 +1,716 @@
+{
+  "info": {
+    "name": "Event Sync API (Bruno)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = res.getBody();",
+                  "bru.setVar(\"token\", data.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean@mail.com\",\n  \"password\": \"jean\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/login",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean@mail.com\",\n  \"password\": \"jean\",\n  \"name\": \"jean\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Check Auth Status",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/auth/authStatus",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["auth", "authStatus"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Create Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"roomId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Amphithéâtre\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/rooms",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get all Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/rooms",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get Room by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Room",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Amphithéâtre - Rénové\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Room",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/rooms/{{roomId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["rooms", "{{roomId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Speakers",
+      "item": [
+        {
+          "name": "Create Speaker",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"speakerId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"base64Picture\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12P4z8BQDwAEgAF/QualzQAAAABJRU5ErkJggg==\",\n  \"biography\": \"Expert en cybersécurité\",\n  \"links\": [\n    {\n      \"platform\": \"GITHUB\",\n      \"url\": \"https://github.com/johndoe\",\n      \"label\": \"GitHub\"\n    },\n    {\n      \"platform\": \"LINKEDIN\",\n      \"url\": \"https://linkedin.com/in/johndoe\",\n      \"label\": \"LinkedIn\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/speakers",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers"]
+            }
+          }
+        },
+        {
+          "name": "Get all Speakers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/speakers",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers"]
+            }
+          }
+        },
+        {
+          "name": "Get Speaker by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Speaker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"base64Picture\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12P4z8BQDwAEgAF/QualzQAAAABJRU5ErkJggg==\",\n  \"biography\": \"Expert en cybersécurité et cloud computing\",\n  \"links\": [\n    {\n      \"platform\": \"GITHUB\",\n      \"url\": \"https://github.com/johndoe\",\n      \"label\": \"GitHub\"\n    },\n    {\n      \"platform\": \"WEBSITE\",\n      \"url\": \"https://johndoe.dev\",\n      \"label\": \"Site personnel\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Speaker",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/speakers/{{speakerId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["speakers", "{{speakerId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"eventId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Conférence Tech 2026\",\n  \"description\": \"Une conférence sur les technologies modernes\",\n  \"startDateTime\": \"2026-07-15T09:00:00Z\",\n  \"endDateTime\": \"2026-07-17T18:00:00Z\",\n  \"location\": \"Paris, France\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Get all Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Conférence Tech 2026 - Édition Été\",\n  \"description\": \"Une conférence sur les technologies modernes (mise à jour)\",\n  \"startDateTime\": \"2026-07-15T09:00:00Z\",\n  \"endDateTime\": \"2026-07-17T18:00:00Z\",\n  \"location\": \"Paris, France\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"sessionId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Introduction à Spring Boot\",\n  \"description\": \"Les fondamentaux de Spring Boot\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"2026-07-15T10:00:00Z\",\n  \"endTime\": \"2026-07-15T11:30:00Z\",\n  \"capacity\": 100,\n  \"speakersId\": [\"{{speakerId}}\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get all Sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get Session by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Introduction à Spring Boot 4\",\n  \"description\": \"Les nouveautés de Spring Boot 4\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"2026-07-15T10:00:00Z\",\n  \"endTime\": \"2026-07-15T11:30:00Z\",\n  \"capacity\": 150,\n  \"speakersId\": [\"{{speakerId}}\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Session",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Registration Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register for Session",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        },
+        {
+          "name": "Unregister from Session",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/register",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "Post a Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"questionId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Quels sont les prérequis ?\",\n  \"isAnonymous\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Post Anonymous Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Cette session est-elle enregistrée ?\",\n  \"isAnonymous\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Get all Questions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions"]
+            }
+          }
+        },
+        {
+          "name": "Vote Up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}/vote?upvote=true",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}", "vote"],
+              "query": [{ "key": "upvote", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "Vote Down",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}/vote?upvote=false",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}", "vote"],
+              "query": [{ "key": "upvote", "value": "false" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Question",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/events/{{eventId}}/sessions/{{sessionId}}/questions/{{questionId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["events", "{{eventId}}", "sessions", "{{sessionId}}", "questions", "{{questionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get all Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/users",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"userId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const data = res.getBody();", "bru.setVar(\"userId\", data.id);"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test User\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User Updated\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "{{token}}" }],
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}",
+              "protocol": "http",
+              "host": ["localhost", "8080"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "token", "value": "" },
+    { "key": "roomId", "value": "" },
+    { "key": "speakerId", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "userId", "value": "" }
+  ]
+}

@@ -29,6 +29,39 @@ components:
   # ─────────────────────────────────────────
   schemas:
 
+    # ── USER ────────────────────────────
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        isAdmin:
+          type: boolean
+        email:
+          type: string
+          format: email
+          nullable: true
+        name:
+          type: string
+        joinDate:
+          type: string
+          format: date-time
+      required: [ id, isAdmin, name ]
+
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        name:
+          type: string
+        isAdmin:
+          type: boolean
+
     # ── EVENT ────────────────────────────
     Event:
       type: object
@@ -38,23 +71,23 @@ components:
           format: uuid
         title:
           type: string
-          example: "DevConf 2025"
+          example: "DevConf 2026"
         description:
           type: string
-        startDate:
+          nullable: true
+        startDateTime:
           type: string
           format: date-time
-        endDate:
+        endDateTime:
           type: string
           format: date-time
         location:
           type: string
-          example: "Paris, France"
-        sessions:
-          type: array
-          items:
-            $ref: "#/components/schemas/SessionSummary"
-      required: [ id, title, startDate, endDate, location ]
+          example: "Paris Convention Center"
+        createdBy:
+          $ref: "#/components/schemas/User"
+          nullable: true
+      required: [ id, title, startDateTime, endDateTime, location ]
 
     EventCreate:
       type: object
@@ -63,15 +96,15 @@ components:
           type: string
         description:
           type: string
-        startDate:
+        startDateTime:
           type: string
           format: date-time
-        endDate:
+        endDateTime:
           type: string
           format: date-time
         location:
           type: string
-      required: [ title, startDate, endDate, location ]
+      required: [ title, startDateTime, endDateTime, location ]
 
     # ── SESSION ──────────────────────────────
     Session:
@@ -84,20 +117,19 @@ components:
           type: string
         description:
           type: string
-        starttime:
+        startTime:
           type: string
           format: date-time
-        endtime:
+        endTime:
           type: string
           format: date-time
         capacity:
           type: integer
-          description: Informational value only
-        isLive:
-          type: boolean
-          description: True if current time is between starttime and endtime
-        room:
-          $ref: "#/components/schemas/Room"
+          nullable: true
+        roomId:
+          type: string
+          format: uuid
+          nullable: true
         speakers:
           type: array
           items:
@@ -105,7 +137,7 @@ components:
         eventId:
           type: string
           format: uuid
-      required: [ id, title, starttime, endtime, room, speakers, eventId ]
+      required: [ id, title, description, startTime, endTime, speakers, eventId ]
 
     SessionSummary:
       type: object
@@ -115,16 +147,16 @@ components:
           format: uuid
         title:
           type: string
-        starttime:
+        startTime:
           type: string
           format: date-time
-        endtime:
+        endTime:
           type: string
           format: date-time
-        isLive:
-          type: boolean
-        room:
-          $ref: "#/components/schemas/Room"
+        roomId:
+          type: string
+          format: uuid
+          nullable: true
         speakers:
           type: array
           items:
@@ -133,28 +165,32 @@ components:
     SessionCreate:
       type: object
       properties:
+        eventId:
+          type: string
+          format: uuid
         title:
           type: string
         description:
           type: string
-        starttime:
+        startTime:
           type: string
           format: date-time
-        endtime:
+        endTime:
           type: string
           format: date-time
         capacity:
           type: integer
+          minimum: 1
         roomId:
           type: string
           format: uuid
-        speakerIds:
+        speakersId:
           type: array
           items:
             type: string
             format: uuid
           minItems: 1
-      required: [ title, starttime, endtime, roomId, speakerIds ]
+      required: [ eventId, title, description, startTime, endTime, capacity, roomId, speakersId ]
 
     # ── ROOM ────────────────────────────────
     Room:
@@ -175,6 +211,39 @@ components:
           type: string
       required: [ name ]
 
+    # ── SPEAKER LINK ─────────────────────
+    SpeakerLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        speakerId:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum: [ TWITTER, LINKEDIN, GITHUB, YOUTUBE, WEBSITE, OTHER ]
+        url:
+          type: string
+        label:
+          type: string
+          nullable: true
+      required: [ id, speakerId, platform, url ]
+
+    SpeakerLinkCreate:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [ TWITTER, LINKEDIN, GITHUB, YOUTUBE, WEBSITE, OTHER ]
+        url:
+          type: string
+        label:
+          type: string
+          nullable: true
+      required: [ platform, url ]
+
     # ── SPEAKER ──────────────────────────
     Speaker:
       type: object
@@ -182,23 +251,23 @@ components:
         id:
           type: string
           format: uuid
-        fullName:
+        firstName:
           type: string
-        profilePicture:
+        lastName:
           type: string
-          format: uri
+          nullable: true
+        base64Picture:
+          type: string
+          nullable: true
+          description: Base64 data URI of the speaker picture
         biography:
           type: string
-        externalLinks:
+          nullable: true
+        links:
           type: array
           items:
-            type: string
-            format: uri
-        sessions:
-          type: array
-          items:
-            $ref: "#/components/schemas/SessionSummary"
-      required: [ id, fullName ]
+            $ref: "#/components/schemas/SpeakerLink"
+      required: [ id, firstName ]
 
     SpeakerSummary:
       type: object
@@ -206,28 +275,34 @@ components:
         id:
           type: string
           format: uuid
-        fullName:
+        firstName:
           type: string
-        profilePicture:
+        lastName:
           type: string
-          format: uri
+          nullable: true
+        base64Picture:
+          type: string
+          nullable: true
 
     SpeakerCreate:
       type: object
       properties:
-        fullName:
+        firstName:
           type: string
-        profilePicture:
+        lastName:
           type: string
-          format: uri
+          nullable: true
+        base64Picture:
+          type: string
+          description: Base64 data URI of the speaker picture
         biography:
           type: string
-        externalLinks:
+          nullable: true
+        links:
           type: array
           items:
-            type: string
-            format: uri
-      required: [ fullName ]
+            $ref: "#/components/schemas/SpeakerLinkCreate"
+      required: [ firstName, base64Picture ]
 
     # ── QUESTION ─────────────────────────────
     Question:
@@ -238,8 +313,8 @@ components:
           format: uuid
         content:
           type: string
-        authorName:
-          type: string
+        user:
+          $ref: "#/components/schemas/User"
           nullable: true
           description: Null if anonymous
         upvotes:
@@ -248,10 +323,7 @@ components:
         createdAt:
           type: string
           format: date-time
-        sessionId:
-          type: string
-          format: uuid
-      required: [ id, content, upvotes, createdAt, sessionId ]
+      required: [ id, content, upvotes, createdAt ]
 
     QuestionCreate:
       type: object
@@ -259,11 +331,9 @@ components:
         content:
           type: string
           minLength: 1
-        authorName:
-          type: string
-          nullable: true
-          description: Optional — anonymous if omitted
-      required: [ content ]
+        isAnonymous:
+          type: boolean
+      required: [ content, isAnonymous ]
 
     # ── AUTH ─────────────────────────────────
     LoginRequest:
@@ -294,12 +364,12 @@ components:
     LoginResponse:
       type: object
       properties:
-        accessToken:
+        access_token:
           type: string
-        tokenType:
+        token_type:
           type: string
           example: "bearer"
-        expiresIn:
+        expires_in:
           type: integer
           example: 3600
 
@@ -318,35 +388,9 @@ components:
 # ─────────────────────────────────────────
 paths:
   # ── AUTH ─────────────────────────────────
-  /auth/register:
-    post:
-      summary: Register a new organizer
-      tags: [ Auth ]
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegisterRequest"
-      responses:
-        "200":
-          description: Register successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoginResponse"
-        "409":
-          description: Email is already used
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
   /auth/login:
     post:
-      summary: Organizer login
+      summary: Login
       tags: [ Auth ]
       requestBody:
         required: true
@@ -368,14 +412,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /auth/register:
+    post:
+      summary: Register a new user (open registration)
+      tags: [ Auth ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Register successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/authStatus:
+    post:
+      summary: Check if authentication token is valid
+      tags: [ Auth ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token is valid
+        "401":
+          description: Invalid or expired token
+
   # ── EVENTS ───────────────────────────────
   /events:
     get:
-      summary: List all events
+      summary: List all events (paginated)
       tags: [ Events ]
+      parameters:
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
+          in: query
+          schema:
+            type: string
+            default: startDateTime
+        - name: _order
+          in: query
+          schema:
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+          description: Filter by specific IDs
       responses:
         "200":
           description: List of events
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of events
           content:
             application/json:
               schema:
@@ -473,23 +594,38 @@ paths:
           format: uuid
 
     get:
-      summary: List sessions for an event
+      summary: List sessions for an event (paginated)
       tags: [ Sessions ]
       parameters:
-        - name: roomId
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
           in: query
           schema:
             type: string
-            format: uuid
-          description: Filter by room
-        - name: live
+            default: startTime
+        - name: _order
           in: query
           schema:
-            type: boolean
-          description: Filter only currently live sessions
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
       responses:
         "200":
           description: List of sessions
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of sessions
           content:
             application/json:
               schema:
@@ -515,6 +651,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          description: Bad request
         "401":
           description: Unauthorized
 
@@ -564,8 +702,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          description: Bad request
         "401":
           description: Unauthorized
+        "404":
+          description: Session not found
 
     delete:
       summary: Delete a session
@@ -577,6 +719,66 @@ paths:
           description: Session deleted
         "401":
           description: Unauthorized
+        "404":
+          description: Session not found
+
+  /events/{eventId}/sessions/{sessionId}/register:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get registration count for a session
+      tags: [ Sessions ]
+      responses:
+        "200":
+          description: Registration count
+          content:
+            application/json:
+              schema:
+                type: integer
+        "404":
+          description: Session not found
+
+    post:
+      summary: Register current user for a session
+      tags: [ Sessions ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        "201":
+          description: Registered successfully
+        "400":
+          description: Session is full, already registered, or has already started
+        "401":
+          description: Unauthorized
+        "404":
+          description: Session not found
+
+    delete:
+      summary: Unregister from a session
+      tags: [ Sessions ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        "204":
+          description: Unregistered successfully
+        "400":
+          description: Session has already started or no registration found
+        "401":
+          description: Unauthorized
+        "404":
+          description: Session not found
 
   # ── QUESTIONS ────────────────────────────
   /events/{eventId}/sessions/{sessionId}/questions:
@@ -595,11 +797,44 @@ paths:
           format: uuid
 
     get:
-      summary: List questions for a session (sorted by upvotes)
+      summary: List questions for a session (paginated)
       tags: [ Questions ]
+      parameters:
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
+          in: query
+          schema:
+            type: string
+            default: upvotes
+        - name: _order
+          in: query
+          schema:
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
       responses:
         "200":
-          description: List of questions sorted by descending upvotes
+          description: List of questions
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
           content:
             application/json:
               schema:
@@ -607,11 +842,19 @@ paths:
                 items:
                   $ref: "#/components/schemas/Question"
         "403":
-          description: Session not live — questions not accessible
+          description: Session not live
 
     post:
       summary: Ask a question (live sessions only)
       tags: [ Questions ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -625,8 +868,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Question"
-        "403":
-          description: Session not live — cannot submit a question
+        "400":
+          description: Session not live
+        "401":
+          description: Unauthorized
+
+    delete:
+      summary: Delete all questions for a session (admin only)
+      tags: [ Questions ]
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+      responses:
+        "204":
+          description: Questions deleted
+        "401":
+          description: Unauthorized
+
+  /events/{eventId}/sessions/{sessionId}/questions/{questionId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: questionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      summary: Delete a question (admin only)
+      tags: [ Questions ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        "204":
+          description: Question deleted
+        "401":
+          description: Unauthorized
 
   /events/{eventId}/sessions/{sessionId}/questions/{questionId}/vote:
     parameters:
@@ -655,8 +952,16 @@ paths:
           type: boolean
 
     post:
-      summary: Upvote a question
+      summary: Upvote a question (live sessions only)
       tags: [ Questions ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: Upvote recorded
@@ -664,17 +969,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Question"
+        "400":
+          description: Session not live
+        "401":
+          description: Unauthorized
         "404":
           description: Question not found
 
   # ── ROOMS ───────────────────────────────
   /rooms:
     get:
-      summary: List all rooms
+      summary: List all rooms (paginated)
       tags: [ Rooms ]
+      parameters:
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
+          in: query
+          schema:
+            type: string
+            default: name
+        - name: _order
+          in: query
+          schema:
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
       responses:
         "200":
           description: List of rooms
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
           content:
             application/json:
               schema:
@@ -717,7 +1059,7 @@ paths:
       tags: [ Rooms ]
       responses:
         "200":
-          description: Room with chronological list of sessions
+          description: Room with sessions
           content:
             application/json:
               schema:
@@ -729,6 +1071,8 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/SessionSummary"
+        "404":
+          description: Room not found
 
     put:
       summary: Update a room
@@ -744,8 +1088,14 @@ paths:
       responses:
         "200":
           description: Room updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
         "401":
           description: Unauthorized
+        "404":
+          description: Room not found
 
     delete:
       summary: Delete a room
@@ -757,21 +1107,56 @@ paths:
           description: Room deleted
         "401":
           description: Unauthorized
+        "404":
+          description: Room not found
 
   # ── SPEAKERS ─────────────────────────────
   /speakers:
     get:
-      summary: List all speakers
+      summary: List all speakers (paginated)
       tags: [ Speakers ]
+      parameters:
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
+          in: query
+          schema:
+            type: string
+            default: firstName
+        - name: _order
+          in: query
+          schema:
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
       responses:
         "200":
           description: List of speakers
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SpeakerSummary"
+                  $ref: "#/components/schemas/Speaker"
 
     post:
       summary: Create a speaker
@@ -804,11 +1189,11 @@ paths:
           format: uuid
 
     get:
-      summary: Public speaker profile
+      summary: Speaker profile
       tags: [ Speakers ]
       responses:
         "200":
-          description: Full profile with associated sessions
+          description: Speaker profile
           content:
             application/json:
               schema:
@@ -830,8 +1215,14 @@ paths:
       responses:
         "200":
           description: Speaker updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Speaker"
         "401":
           description: Unauthorized
+        "404":
+          description: Speaker not found
 
     delete:
       summary: Delete a speaker
@@ -843,6 +1234,145 @@ paths:
           description: Speaker deleted
         "401":
           description: Unauthorized
+        "404":
+          description: Speaker not found
+
+  # ── USERS ───────────────────────────────
+  /users:
+    get:
+      summary: List all users (admin only)
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: _start
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: _end
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: _sort
+          in: query
+          schema:
+            type: string
+            default: name
+        - name: _order
+          in: query
+          schema:
+            type: string
+            enum: [ ASC, DESC ]
+            default: ASC
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+      responses:
+        "200":
+          description: List of users
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+    post:
+      summary: Create a user (admin only)
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+        "409":
+          description: Email already in use
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get user by ID (admin only)
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+
+    put:
+      summary: Update a user (admin only)
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+
+    delete:
+      summary: Delete a user (admin only)
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        "204":
+          description: User deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
 
 # ─────────────────────────────────────────
 # TAGS
@@ -860,3 +1390,5 @@ tags:
     description: Room management and room view
   - name: Speakers
     description: Public profiles and management
+  - name: Users
+    description: User management (admin only)

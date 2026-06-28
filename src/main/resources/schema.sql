@@ -7,12 +7,6 @@ DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS speakers CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
-DROP TYPE IF EXISTS session_status CASCADE;
-DROP TYPE IF EXISTS link_platform CASCADE;
-
-CREATE TYPE session_status AS ENUM ('PUBLISHED', 'LIVE', 'ENDED');
-CREATE TYPE link_platform AS ENUM ('TWITTER', 'LINKEDIN', 'GITHUB', 'YOUTUBE', 'WEBSITE', 'OTHER');
-
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
@@ -54,9 +48,8 @@ CREATE TABLE sessions (
     start_time TIMESTAMPTZ NOT NULL,
     end_time TIMESTAMPTZ NOT NULL,
     CONSTRAINT end_after_start CHECK (end_time >= start_time),
-    capacity INTEGER,
-    status session_status NOT NULL DEFAULT 'PUBLISHED'
-);
+    capacity INTEGER
+  );
 
 CREATE TABLE session_registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -74,7 +67,7 @@ CREATE TABLE sessions_speakers (
 CREATE TABLE speaker_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     speaker_id UUID NOT NULL REFERENCES speakers(id) ON DELETE CASCADE,
-    platform link_platform NOT NULL DEFAULT 'OTHER',
+    platform VARCHAR(255) NOT NULL DEFAULT 'OTHER',
     url VARCHAR(255) NOT NULL,
     label VARCHAR(255)
 );
