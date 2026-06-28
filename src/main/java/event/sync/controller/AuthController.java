@@ -1,6 +1,7 @@
 package event.sync.controller;
 
 import event.sync.dto.auth.*;
+import event.sync.exception.ConflictException;
 import event.sync.service.AuthService;
 import event.sync.service.JwtService;
 import jakarta.validation.Valid;
@@ -25,7 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<LoginResponse> register(@RequestBody @Valid RegisterRequest request) throws ConflictException {
         LoginResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }

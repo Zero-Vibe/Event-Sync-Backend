@@ -47,6 +47,9 @@ public class UserService {
     @Transactional
     public User create(RegisterRequest request) throws ConflictException {
         String passwordHash = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
+        if (userRepository.findByName(request.getName()).isPresent()) {
+            throw new ConflictException("Username already registered");
+        };
 
         try {
             return userRepository.save(User.builder()
@@ -64,6 +67,10 @@ public class UserService {
     @Transactional
     public User update(UUID id, UserUpdateRequest request) throws NotFoundException, ConflictException {
         User user = findById(id);
+        if (!user.getName().equals(request.getName())
+                && userRepository.findByName(request.getName()).isPresent()) {
+            throw new ConflictException("Username already registered");
+        };
 
         String passwordHash = request.getPassword() != null
                 ? BCrypt.hashpw(request.getPassword(), BCrypt.gensalt())
