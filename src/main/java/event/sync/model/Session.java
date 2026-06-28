@@ -36,7 +36,7 @@ public class Session {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id", nullable = false, referencedColumnName = "id")
+    @JoinColumn(name = "room_id", referencedColumnName = "id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Room room;
     public UUID getRoomId() { return (room != null) ? room.getId() : null; }
