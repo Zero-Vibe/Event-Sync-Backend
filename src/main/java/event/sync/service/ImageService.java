@@ -39,9 +39,15 @@ public class ImageService {
     }
 
     public String getBase64Image(String fileName) {
+        if (fileName == null || fileName.isBlank()) return null;
+
+        if (fileName.startsWith("http://") || fileName.startsWith("https://")) {
+            return fileName;
+        }
+
         try {
             File file = Paths.get(System.getProperty("user.dir"), "speaker_images", fileName).toFile();
-            return "data:image/"+ fileName.substring(fileName.lastIndexOf('.') + 1) +
+            return "data:image/" + fileName.substring(fileName.lastIndexOf('.') + 1) +
                     ";base64," +
                     Base64.getEncoder().encodeToString(Files.readAllBytes(file.toPath()));
         } catch (IOException ignored) {
