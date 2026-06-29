@@ -61,6 +61,18 @@ public class QuestionController {
                 .body(pagedResultPage.getContent());
     }
 
+    @GetMapping("/{eventId}/sessions/{sessionId}/top-questions")
+    public ResponseEntity<?> getTopQuestions(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sessionId) throws NotFoundException {
+
+        isEventRelated(eventId,sessionId);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(questionService.getTopQuestions(sessionId));
+    }
+
     @PostMapping("/{eventId}/sessions/{sessionId}/questions")
     public ResponseEntity<?> postQuestion(@PathVariable UUID eventId,
                                           @PathVariable UUID sessionId,

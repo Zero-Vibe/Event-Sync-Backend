@@ -3,8 +3,10 @@ package event.sync.service;
 import event.sync.dto.speaker.SpeakerCreateRequest;
 import event.sync.dto.speaker.SpeakerLinkRequest;
 import event.sync.exception.NotFoundException;
+import event.sync.model.Session;
 import event.sync.model.Speaker;
 import event.sync.model.SpeakerLink;
+import event.sync.repository.SessionRepository;
 import event.sync.repository.SpeakerLinkRepository;
 import event.sync.repository.SpeakerRepository;
 import event.sync.specification.FilterSpecification;
@@ -27,6 +29,7 @@ public class SpeakerService {
     private final SpeakerRepository speakerRepository;
     private final SpeakerLinkRepository speakerLinkRepository;
     private final ImageService imageService;
+    private final SessionRepository sessionRepository;
 
     public Speaker findById(UUID id) throws NotFoundException {
         Speaker speaker = speakerRepository.findById(id)
@@ -112,6 +115,10 @@ public class SpeakerService {
             if (image != null) imageService.deleteImage(image.getName());
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Session> findSessions(UUID speakerId) throws NotFoundException {
+        return sessionRepository.findSessionsBySpeaker(findById(speakerId));
     }
 
     @Transactional
