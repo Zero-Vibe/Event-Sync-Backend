@@ -36,4 +36,17 @@ public class AuthController {
         jwtService.decodeToken(token);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
+
+    @PostMapping("/admin/login")
+    public ResponseEntity<LoginResponse> adminLogin(@RequestBody @Valid LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        if (jwtService.decodeToken(response.getAccessToken()).get("isAdmin").equals(Boolean.FALSE)) throw new AuthService.PermissionDeniedException();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/admin/authStatus")
+    public ResponseEntity<?> checkAdminAuth(@RequestHeader(name = "Authorization") String token) {
+        if (jwtService.decodeToken(token).get("isAdmin").equals(Boolean.FALSE)) throw new AuthService.PermissionDeniedException();
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 }
