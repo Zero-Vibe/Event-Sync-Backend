@@ -9,10 +9,7 @@ import event.sync.repository.UserRepository;
 import event.sync.specification.FilterSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -38,6 +35,10 @@ public class QuestionService {
 
     public List<Question> getSessionQuestions(UUID sessionId) {
         return questionRepository.getQuestionsBySession_Id(sessionId);
+    }
+
+    public List<Question> getTopQuestions(UUID sessionId) {
+        return questionRepository.getTopBySessionId(sessionId, Sort.by("upvotes").descending(), Limit.of(5));
     }
 
     public List<Question> getMany(List<UUID> ids) {

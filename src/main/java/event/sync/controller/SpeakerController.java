@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +33,13 @@ public class SpeakerController {
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
                 .body(speakerService.findById(speakerId));
+    }
+
+    @GetMapping("/{speakerId}/sessions")
+    public ResponseEntity<?> findSessions(@PathVariable UUID speakerId) throws NotFoundException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(speakerService.findSessions(speakerId));
     }
 
     @GetMapping
